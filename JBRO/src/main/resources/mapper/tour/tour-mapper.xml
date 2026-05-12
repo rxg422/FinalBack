@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="tourMapper">
+
+	<select id="isTourPlace" resultType="int">
+		SELECT COUNT(*) FROM TOUR_PLACE WHERE CONTENT_ID = #{contentId}
+	</select>
+
+	<insert id="insertTourPlace">
+		INSERT INTO TOUR_PLACE VALUES(SEQ_TOUR_PLACE_ID.NEXTVAL, #{contentId}, #{title}, #{contentTypeId}, #{areaCode}, #{firstImage}, #{firstImage2}, #{tel}, #{telName}, #{homepage}, #{addr1}, #{addr2}, #{mapX}, #{mapY}, #{overview})
+	</insert>
+	
+</mapper>
