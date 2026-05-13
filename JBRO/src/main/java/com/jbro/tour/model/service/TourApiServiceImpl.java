@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -14,16 +15,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jbro.tour.model.dao.TourApiDao;
 import com.jbro.tour.model.dto.CultureIntroDto;
-import com.jbro.tour.model.dto.PlaceDetailDto;
-import com.jbro.tour.model.dto.TourDetailIntroDto;
+import com.jbro.tour.model.dto.FestivalIntroDto;
+import com.jbro.tour.model.dto.FoodIntroDto;
+import com.jbro.tour.model.dto.LDongDto;
+import com.jbro.tour.model.dto.LeportsIntroDto;
+import com.jbro.tour.model.dto.LodgingIntroDto;
 import com.jbro.tour.model.dto.PlaceDto;
+import com.jbro.tour.model.dto.PlaceImageDto;
 import com.jbro.tour.model.dto.PlaceIntroDto;
-import com.jbro.tour.model.vo.TourPlace;
+import com.jbro.tour.model.dto.ShopIntroDto;
 
+import io.swagger.v3.oas.models.parameters.QueryParameter;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+
 public class TourApiServiceImpl implements TourApiService {
 
 	/* 의존성 주입 */
@@ -33,14 +40,15 @@ public class TourApiServiceImpl implements TourApiService {
 
 	/* 상수 정의 */
 	private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
-	private static final String SERVICE_KEY = "f9627dd46c0c9f97d293b27fdb6767a789bb707a1fb167cc9b556922b080c79d";
+	private static final String SERVICE_KEY = "761334040e862c2bc51543d43550c5d1c8b97896feafc2531642e8ae927b0f6c";
 
 	@Override
 	public void fetchAndSaveTourData() {
 		int areaCode = 37;
-		int pageNo = 1;
+		int pageNo = 10;
 		int numOfRows = 100;
-
+		int lDongRegnCd = 52;
+		
 		List<PlaceDto> placeList;
 		
 		while (true) {
@@ -52,20 +60,18 @@ public class TourApiServiceImpl implements TourApiService {
 			}
 
 			for (PlaceDto place : placeList) {
-				try {
-					if (place.getContentTypeId() != 12) {
-						continue;
-					}
-
-					// 관광 기본 정보 조회 및 저장
-					savePlace(place);
-
-					// 관광 상세 정보 조회 및 저장
-//					saveIntro(place.getContentId(), place.getContentTypeId());
-
-				} catch (Exception e) {
-					e.printStackTrace();
+				if (place.getContentTypeId() == 25 || findPlaceByContentId(place.getContentId())) {
+					continue;
 				}
+				
+				// 관광 기본 정보 조회 및 저장
+				savePlace(place);
+				
+				// 관광 상세 정보 조회 및 저장
+				saveIntro(place.getContentId(), place.getContentTypeId());
+				
+				// 관광지 이미지 정보 조회 및 저장
+				saveImg(place.getContentId());
 			}
 
 			pageNo++;
@@ -91,17 +97,14 @@ public class TourApiServiceImpl implements TourApiService {
 
 		try {
 			JsonNode items = objectMapper.readTree(response).path("response").path("body").path("items").path("item");
-
+			
 			if (!items.isArray()) {
 				return list;
 			}
-			
-			System.out.println(items);
 
 			for (JsonNode item : items) {
 				PlaceDto dto = new PlaceDto();
-
-
+				
 				dto.setContentId(getInt(item, "contentid"));
 				dto.setContentTypeId(getInt(item, "contenttypeid"));
 				dto.setTitle(getText(item, "title"));
@@ -111,7 +114,24 @@ public class TourApiServiceImpl implements TourApiService {
 				dto.setAddr2(getText(item, "addr2"));
 				dto.setMapX(getDouble(item, "mapx"));
 				dto.setMapY(getDouble(item, "mapy"));
-
+				dto.setLDongRegnCd(getInt(item, "lDongRegnCd"));
+				dto.setLDongSignguCd(getInt(item, "lDongSignguCd"));
+				
+				switch(dto.getContentTypeId()) {
+				case 12, 14, 28, 38 :
+					dto.setCategoryId(1);
+					break;
+				case 15 :
+					dto.setCategoryId(3);
+					break;
+				case 32 :
+					dto.setCategoryId(4);
+					break;
+				case 39 :
+					dto.setCategoryId(2);
+					break;
+				}
+				
 				list.add(dto);
 			}
 		}
@@ -124,6 +144,7 @@ public class TourApiServiceImpl implements TourApiService {
 
 	/* 관광 기본 정보 조회 및 저장 */
 	private void savePlace(PlaceDto dto) {
+		System.out.println("관광 기본 정보 조회");
 		try {
 			URI uri = UriComponentsBuilder
 					.fromHttpUrl(BASE_URL + "/detailCommon2")
@@ -132,8 +153,6 @@ public class TourApiServiceImpl implements TourApiService {
 					.queryParam("serviceKey", SERVICE_KEY)
 					.queryParam("_type", "json")
 					.queryParam("contentId", dto.getContentId())
-					.queryParam("defaultYN", "Y")
-					.queryParam("overviewYN", "Y")
 					.build(true).toUri();
 			
 			String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
@@ -149,8 +168,8 @@ public class TourApiServiceImpl implements TourApiService {
 			dto.setTel(getText(item, "tel"));
 			dto.setTelName(getText(item, "telName"));
 			
-//			tourApiDao.insertPlace(dto);
-//			System.out.println(dto);
+			tourApiDao.insertPlace(dto);
+			System.out.println("관광지 DB 저장");
 		}
 		catch (JsonMappingException e) {
 			e.printStackTrace();
@@ -160,14 +179,14 @@ public class TourApiServiceImpl implements TourApiService {
 		}
 	}
 
-	/* 소개 정보 조회 */
+	/* 컨텐츠 별 세부정보 조회 및 저장 */
 	private void saveIntro(int contentId, int contentTypeId) {
 		try {
 			URI uri = UriComponentsBuilder
 					.fromHttpUrl(BASE_URL + "/detailIntro2")
-					.queryParam("serviceKey", SERVICE_KEY)
 					.queryParam("MobileOS", "ETC")
-					.queryParam("MobileApp", "tour-app")
+					.queryParam("MobileApp", "JBRO")
+					.queryParam("serviceKey", SERVICE_KEY)
 					.queryParam("_type", "json")
 					.queryParam("contentId", contentId)
 					.queryParam("contentTypeId", contentTypeId)
@@ -183,16 +202,132 @@ public class TourApiServiceImpl implements TourApiService {
 			
 			switch (contentTypeId) {
 				case 12 :
-					PlaceIntroDto placeDto = new PlaceIntroDto();
+					PlaceIntroDto place = new PlaceIntroDto();
 					
-					placeDto.setContentId(contentId);
-					placeDto.setInfoCenter(getText(item, "infocenter"));
-					placeDto.setOpenDate(getText(item, "opendate"));
-					placeDto.setParking(getText(item, "parking"));
-					placeDto.setUseSeason(getText(item, "useseason"));
-					placeDto.setUseTime(getText(item, "usetime"));
+					place.setContentId(contentId);
+					place.setInfoCenter(getText(item, "infocenter"));
+					place.setOpenDate(getText(item, "opendate"));
+					place.setParking(getText(item, "parking"));
+					place.setUseSeason(getText(item, "useseason"));
+					place.setUseTime(getText(item, "usetime"));
+					place.setRestDate(getText(item, "restdate"));
 					
-//					System.out.println(placeDto);
+					tourApiDao.insertPlaceIntro(place);
+					
+					break;
+				case 14 :
+					CultureIntroDto culture = new CultureIntroDto();
+					
+					culture.setContentId(contentId);
+					culture.setInfoCenterCulture(getText(item, "infocenterculture"));	// 문의및안내
+					culture.setParkingCulture(getText(item, "parkingculture"));		// 주차시설
+					culture.setParkingFee(getText(item, "parkingfee")); 			// 주차요금
+					culture.setRestDateCulture(getText(item, "restdateculture")); 	// 쉬는날
+					culture.setUseFee(getText(item, "usefee")); 				// 이용요금
+					culture.setUseTimeCulture(getText(item, "usetimeculture"));		// 이용시간
+					culture.setSpendTime(getText(item, "spendtime"));			// 관람소요시간
+					
+					tourApiDao.insertCultureIntro(culture);
+					
+					break;
+				case 15 :
+					FestivalIntroDto festival = new FestivalIntroDto();
+					
+					festival.setContentId(contentId);	
+					festival.setAgeLimit(getText(item, "agelimit"));
+					festival.setBookingPlace(getText(item, "bookingplace"));
+					festival.setEventedDate(getText(item, "eventeddate"));
+					festival.setEventHomepage(getText(item, "eventhomepage"));
+					festival.setSpendTimeFestival(getText(item, "spendtimefestival"));
+					festival.setSponsor1(getText(item, "sponsor1"));
+					festival.setSponsor1Tel(getText(item, "sponsor1tel"));
+					festival.setSponsor2(getText(item, "sponsor2"));
+					festival.setSponsor2Tel(getText(item, "sponsor2tel"));
+					festival.setUseTimeFestival(getText(item, "usetimefestival"));
+					
+					tourApiDao.insertFestivalIntro(festival);
+					
+					break;
+				case 28 :
+					LeportsIntroDto leports = new LeportsIntroDto();
+					
+					leports.setContentId(contentId);
+					leports.setExpAgeRangeLeports(getText(item, "expagerangeleports"));
+					leports.setInfoCenterLeports(getText(item, "infocenterleports"));
+					leports.setOpenPeriod(getText(item, "openperiod"));
+					leports.setParkingFeeLeports(getText(item, "parkingfee"));
+					leports.setParkingLeports(getText(item, "parking"));
+					leports.setReservation(getText(item, "reservation"));
+					
+					tourApiDao.insertLeportsIntro(leports);
+					
+					break;
+				case 32 :
+					LodgingIntroDto lodging = new LodgingIntroDto();
+					
+					lodging.setContentId(contentId);
+					lodging.setAccomCountLodging(getText(item, "accomcountlodging"));
+					lodging.setCheckInTime(getText(item, "checkintime"));
+					lodging.setCheckOutTime(getText(item, "checkouttime"));
+					lodging.setChkCooking(getText(item, "chkcooking"));
+					lodging.setFoodPlace(getText(item, "foodplace"));
+					lodging.setInfoCenterLodging(getText(item, "infocenterlodging"));
+					lodging.setParkingLodging(getText(item, "parkinglodging"));
+					lodging.setPickup(getText(item, "pickup"));
+					lodging.setRoomCount(getText(item, "roomcount"));
+					lodging.setReservationLodging(getText(item, "reservationlodging"));
+					lodging.setReservationUrl(getText(item, "reservationurl"));
+					lodging.setRoomType(getText(item, "roomtype"));
+					lodging.setScaleLodging(getText(item, "scalelodging"));
+					lodging.setSubFacility(getText(item, "subfacility"));
+					lodging.setBarbecue(getText(item, "barbecue"));
+					lodging.setBeauty(getText(item, "beauty"));
+					lodging.setBeverage(getText(item, "beverage"));
+					lodging.setBicycle(getText(item, "bicycle"));
+					lodging.setCampfire(getText(item, "campfire"));
+					lodging.setFitness(getText(item, "fitness"));
+					lodging.setKaraoke(getText(item, "karaoke"));
+					lodging.setPublicBath(getText(item, "publicbath"));
+					lodging.setPublicPc(getText(item, "publicpc"));
+					lodging.setSauna(getText(item, "sauna"));
+					lodging.setSeminar(getText(item, "seminar"));
+					lodging.setSports(getText(item, "sports"));
+					lodging.setRefundRegulation(getText(item, "refundregulation"));
+					
+					tourApiDao.insertLodgingIntro(lodging);
+					
+					break;
+				case 38 : 
+					ShopIntroDto shopping = new ShopIntroDto();
+					
+					shopping.setContentId(contentId);
+					shopping.setCultureCenter(getText(item, "culturecenter"));
+					shopping.setFairDay(getText(item, "fairday"));
+					shopping.setInfoCenterShopping(getText(item, "infocentershopping"));
+					shopping.setOpenDateShopping(getText(item, "opendateshopping"));
+					shopping.setOpenTime(getText(item, "opentime"));
+					shopping.setParkingShopping(getText(item, "parkingshopping"));
+					shopping.setRestDateShopping(getText(item, "restdateshopping"));
+					shopping.setRestroom(getText(item, "restroom"));
+					shopping.setShopGuide(getText(item, "shopguide"));
+					
+					tourApiDao.insertShopIntro(shopping);
+					
+					break;
+				case 39 : 
+					FoodIntroDto food = new FoodIntroDto();
+					
+					food.setContentId(contentId);
+					food.setFirstMenu(getText(item, "firstmenu"));
+					food.setInfoCenterFood(getText(item, "infocenterfood"));
+					food.setKidsFacility(getText(item, "kidsfacility"));
+					food.setOpenTimeFood(getText(item, "opentimefood"));
+					food.setPacking(getText(item, "packing"));
+					food.setParkingFood(getText(item, "parkingfood"));
+					food.setReservationFood(getText(item, "reservationfood"));
+					food.setRestDateFood(getText(item, "restdatefood"));
+					
+					tourApiDao.insertFoodIntro(food);
 					
 					break;
 			}
@@ -205,7 +340,44 @@ public class TourApiServiceImpl implements TourApiService {
 		}
 	}
 
-	
+	/* 관광장소 사진 조회 및 저장 */
+	private void saveImg(int contentId) {
+		System.out.println("Test");
+		try {
+			URI uri = UriComponentsBuilder
+					.fromHttpUrl(BASE_URL + "/detailImage2")
+					.queryParam("MobileOS", "ETC")
+					.queryParam("MobileApp", "JBRO")
+					.queryParam("serviceKey", SERVICE_KEY)
+					.queryParam("_type", "json")
+					.queryParam("contentId", contentId)
+					.build(true).toUri();
+			
+			String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
+			
+			JsonNode items = objectMapper.readTree(response).path("response").path("body").path("items").path("item");
+
+			if (!items.isArray()) {
+				return;
+			}
+			
+			for(JsonNode item : items) {
+				PlaceImageDto image = new PlaceImageDto();
+				
+				image.setContentId(contentId);
+				image.setImgName(getText(item, "imgname"));
+				image.setOriginImgUrl(getText(item, "originimgurl"));
+				image.setSerialNum(getText(item, "serialnum"));
+				image.setSmallImageUrl(getText(item, "smallimageurl"));
+				
+				tourApiDao.insertPlaceImg(image);
+			}
+			
+		}
+		catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
+	}
 
 	/* 공통 메서드 */
 	private String getText(JsonNode item, String fieldName) {
@@ -221,8 +393,6 @@ public class TourApiServiceImpl implements TourApiService {
 			return 0;
 		}
 		
-		System.out.println(item.path(fieldName).asInt());
-		
 		return item.path(fieldName).asInt();
 	}
 
@@ -232,6 +402,16 @@ public class TourApiServiceImpl implements TourApiService {
 		}
 		
 		return item.path(fieldName).asDouble();
+	}
+	
+	private boolean findPlaceByContentId(int contentId) {
+		int result = tourApiDao.findPlaceByContentId(contentId);
+		
+		if (result > 0) {
+			return true;
+		}
+		
+		return false;
 	}
 
 }

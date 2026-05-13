@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jbro.auth.model.dao.AuthDAO">
+
+  <resultMap id="memberResultMap" type="com.jbro.mypage.model.vo.MemberVo">
+    <id property="id" column="id"/>
+    <result property="email" column="email"/>
+    <result property="nickname" column="nickname"/>
+    <result property="profile" column="profile"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="status" column="status"/>
+  </resultMap>
+
+  <select id="selectMemberBySocialAccount" resultMap="memberResultMap">
+    SELECT m.id, m.email, m.nickname, m.profile, m.created_at, m.status
+    FROM social_account sa
+    JOIN member m ON m.id = sa.user_id
+    WHERE sa.provider = #{provider}
+      AND sa.provider_id = #{providerId}
+      AND m.status = 'Y'
+  </select>
+
+  <select id="selectActiveMemberByEmail" resultMap="memberResultMap">
+    SELECT id, email, nickname, profile, created_at, status
+    FROM member
+    WHERE email = #{email}
+      AND status = 'Y'
+  </select>
+
+  <insert id="insertMember" parameterType="com.jbro.mypage.model.vo.MemberVo" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO member (
+      email,
+      nickname,
+      profile,
+      status
+    ) VALUES (
+      #{email},
+      #{nickname},
+      #{profile},
+      COALESCE(#{status}, 'Y')
+    )
+  </insert>
+
+  <insert id="insertSocialAccount">
+    INSERT INTO social_account (
+      user_id,
+      provider,
+      provider_id,
+      email,
+      profile
+    ) VALUES (
+      #{userId},
+      #{provider},
+      #{providerId},
+      #{email},
+      #{profile}
+    )
+  </insert>
+</mapper>
