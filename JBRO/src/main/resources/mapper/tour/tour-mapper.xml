@@ -8,7 +8,42 @@
 	</select>
 
 	<insert id="insertTourPlace">
-		INSERT INTO TOUR_PLACE VALUES(SEQ_TOUR_PLACE_ID.NEXTVAL, #{contentId}, #{title}, #{contentTypeId}, #{areaCode}, #{firstImage}, #{firstImage2}, #{tel}, #{telName}, #{homepage}, #{addr1}, #{addr2}, #{mapX}, #{mapY}, #{overview})
+		INSERT INTO TOUR_PLACE VALUES(#{contentId}, #{contentTypeId}, #{categoryId}, #{title}, #{firstImage}, #{firstImage2}, #{addr1}, #{addr2}, #{mapX}, #{mapY}, #{lDongRegnCd}, #{lDongSignguCd}, #{tel}, #{telName}, #{homepage}, #{overview})
 	</insert>
 	
+	<insert id="insertPlaceIntro">
+		INSERT INTO PLACE_INTRO VALUES(#{contentId}, #{infoCenter}, #{openDate}, #{parking}, #{restDate}, #{useSeason}, #{useTime})
+	</insert>
+
+	<insert id="insertCultureIntro">
+		INSERT INTO CULTURE_INTRO VALUES(#{contentId}, #{infoCenterCulture}, #{parkingCulture}, #{parkingFee}, #{restDateCulture}, #{useFee}, #{useTimeCulture}, #{spendTime})
+	</insert>
+	
+	<insert id="insertFestivalIntro">
+		INSERT INTO FESTIVAL_INTRO VALUES(#{contentId}, #{ageLimit}, #{bookingPlace}, #{eventedDate}, #{eventHomepage}, #{spendTimeFestival}, #{sponsor1}, #{sponsor1Tel}, #{sponsor2}, #{sponsor2Tel}, #{useTimeFestival})	
+	</insert>
+
+	<insert id="insertLeportsIntro">
+		INSERT INTO LEPORTS_INTRO VALUES(#{contentId}, #{expAgeRangeLeports}, #{infoCenterLeports}, #{openPeriod}, #{parkingLeports}, #{parkingFeeLeports}, #{reservation})
+	</insert>
+	
+	<insert id="insertShopIntro">
+		INSERT INTO SHOP_INTRO VALUES(#{contentId}, #{cultureCenter}, #{fairDay}, #{infoCenterShopping}, #{openDateShopping}, #{openTime}, #{parkingShopping}, #{restDateShopping}, #{restroom}, #{shopGuide})
+	</insert>
+	
+	<insert id="insertLodgingIntro">
+		INSERT INTO LODGING_INTRO VALUES(#{contentId}, #{accomCountLodging}, #{checkInTime}, #{checkOutTime}, #{chkCooking}, #{foodPlace}, #{infoCenterLodging}, #{parkingLodging}, #{pickup}, #{roomCount}, #{reservationLodging}, #{reservationUrl}, #{roomType}, #{scaleLodging}, #{subFacility}, #{barbecue}, #{beauty}, #{beverage}, #{bicycle}, #{campfire}, #{fitness}, #{karaoke}, #{publicBath}, #{publicPc}, #{sauna}, #{seminar}, #{sports}, #{refundRegulation})
+	</insert>
+	
+	<insert id="insertFoodIntro">
+		INSERT INTO FOOD_INTRO VALUES(#{contentId}, #{firstMenu}, #{infoCenterFood}, #{kidsFacility}, #{openTimeFood}, #{packing}, #{parkingFood}, #{reservationFood}, #{restDateFood})
+	</insert>
+	
+	<insert id="insertPlaceImg">
+		INSERT INTO PLACE_IMG VALUES(SEQ_PLACE_IMG.NEXTVAL, #{contentId}, #{imgName}, #{originImgUrl}, #{serialNum}, #{smallImageUrl})
+	</insert>
+	
+	<insert id="insertLDong">
+		INSERT INTO LDONG VALUES(#{lDongSignguCd}, #{lDongSignguNm})
+	</insert>
 </mapper>

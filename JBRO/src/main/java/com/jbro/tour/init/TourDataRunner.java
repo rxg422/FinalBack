@@ -5,6 +5,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+
+import com.jbro.tour.model.service.LDongService;
 import com.jbro.tour.model.service.TourApiService;
 
 @Component
@@ -12,18 +14,22 @@ import com.jbro.tour.model.service.TourApiService;
 public class TourDataRunner implements ApplicationRunner {
 
     private final TourApiService tourService;
+    private final LDongService lDongService;
 
     @Override
     public void run(ApplicationArguments args) {
-
-        System.out.println("🚀 서버 시작 - 관광 데이터 수집 시작");
-
         try {
+        	System.out.println("🚀 서버 시작 - 관광 데이터 수집 시작");
             tourService.fetchAndSaveTourData();
-        } catch (Exception e) {
+
+            System.out.println("🚀 서버 시작 - 시군구 데이터 수집 시작");
+            lDongService.fetchAndSaveLDongData();
+        }
+        catch (Exception e) {
             System.out.println("❌ 데이터 수집 실패");
             e.printStackTrace();
         }
+
 
         System.out.println("✅ 데이터 수집 완료");
     }
