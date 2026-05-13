@@ -1,6 +1,7 @@
 package com.jbro.tour.model.dao;
 
 import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import com.jbro.tour.model.vo.TourPlace;
@@ -8,6 +9,7 @@ import com.jbro.tour.model.vo.TourPlace;
 import lombok.RequiredArgsConstructor;
 
 @Repository
+@Primary
 @RequiredArgsConstructor
 public class TourApiDaoImpl implements TourApiDao {
 

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jbro.tour.model.dao.TourApiDao;
+import com.jbro.tour.model.dao.TourApiDaoImpl;
 import com.jbro.tour.model.dto.CultureIntroDto;
 import com.jbro.tour.model.dto.PlaceDetailDto;
 import com.jbro.tour.model.dto.TourDetailIntroDto;
@@ -29,7 +29,7 @@ public class TourApiServiceImpl implements TourApiService {
 	/* 의존성 주입 */
 	private final WebClient webClient;
 	private final ObjectMapper objectMapper;
-	private final TourApiDao tourApiDao;
+	private final TourApiDaoImpl tourApiDao;
 
 	/* 상수 정의 */
 	private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
