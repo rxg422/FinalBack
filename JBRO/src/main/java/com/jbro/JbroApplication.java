@@ -2,8 +2,13 @@ package com.jbro;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.mybatis.spring.annotation.MapperScan;
 
-@SpringBootApplication
+@MapperScan({
+	"com.jbro.mypage.model.dao",
+	"com.jbro.tour.model.dao"
+})
+@SpringBootApplication(scanBasePackages = {"com.jbro"})
 public class JbroApplication {
 
 	public static void main(String[] args) {

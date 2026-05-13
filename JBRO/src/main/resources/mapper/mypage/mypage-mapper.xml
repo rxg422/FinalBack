@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jbro.mypage.model.dao.MyPageDAO">
+
+  <resultMap id="memberResultMap" type="com.jbro.mypage.model.vo.MemberVo">
+    <id property="id" column="id"/>
+    <result property="email" column="email"/>
+    <result property="nickname" column="nickname"/>
+    <result property="profile" column="profile"/>
+    <result property="createdAt" column="created_at"/>
+    <result property="status" column="status"/>
+  </resultMap>
+
+  <select id="selectMemberList" resultMap="memberResultMap">
+    SELECT id, email, nickname, profile, created_at, status
+    FROM member
+    ORDER BY id DESC
+  </select>
+
+  <select id="selectMember" parameterType="long" resultMap="memberResultMap">
+    SELECT id, email, nickname, profile, created_at, status
+    FROM member
+    WHERE id = #{memberId}
+  </select>
+
+  <insert id="insertMember" parameterType="com.jbro.mypage.model.vo.MemberVo" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO member (
+      email,
+      nickname,
+      profile,
+      status
+    ) VALUES (
+      #{email},
+      #{nickname},
+      #{profile},
+      COALESCE(#{status}, 'Y')
+    )
+  </insert>
+
+  <update id="updateMember" parameterType="com.jbro.mypage.model.vo.MemberVo">
+    UPDATE member
+    SET email = #{email},
+        nickname = #{nickname},
+        profile = #{profile},
+        status = #{status}
+    WHERE id = #{id}
+  </update>
+
+  <delete id="deleteMember" parameterType="long">
+    DELETE FROM member
+    WHERE id = #{memberId}
+  </delete>
+
+  <select id="selectMyPageProfile" parameterType="long" resultMap="memberResultMap">
+    SELECT id, email, nickname, profile, created_at, status
+    FROM member
+    WHERE id = #{memberId}
+      AND status = 'Y'
+  </select>
+
+  <select id="countByNicknameExceptId" resultType="int">
+    SELECT COUNT(*)
+    FROM member
+    WHERE nickname = #{nickname}
+      AND id != #{memberId}
+      AND status = 'Y'
+  </select>
+
+  <update id="updateProfileNickname">
+    UPDATE member
+    SET nickname = #{nickname}
+    WHERE id = #{memberId}
+      AND status = 'Y'
+  </update>
+
+  <update id="updateProfileImage">
+    UPDATE member
+    SET profile = #{profile}
+    WHERE id = #{memberId}
+      AND status = 'Y'
+  </update>
+</mapper>
