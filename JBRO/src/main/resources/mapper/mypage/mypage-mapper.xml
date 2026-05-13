@@ -49,10 +49,12 @@
     WHERE id = #{id}
   </update>
 
-  <delete id="deleteMember" parameterType="long">
-    DELETE FROM member
+  <update id="deleteMember" parameterType="long">
+    UPDATE member
+    SET status = 'N'
     WHERE id = #{memberId}
-  </delete>
+      AND status = 'Y'
+  </update>
 
   <select id="selectMyPageProfile" parameterType="long" resultMap="memberResultMap">
     SELECT id, email, nickname, profile, created_at, status
@@ -79,6 +81,13 @@
   <update id="updateProfileImage">
     UPDATE member
     SET profile = #{profile}
+    WHERE id = #{memberId}
+      AND status = 'Y'
+  </update>
+
+  <update id="updateMemberStatus">
+    UPDATE member
+    SET status = #{status}
     WHERE id = #{memberId}
       AND status = 'Y'
   </update>

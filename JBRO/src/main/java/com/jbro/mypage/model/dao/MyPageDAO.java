@@ -27,5 +27,6 @@ public interface MyPageDAO {
 	int updateProfileNickname(@Param("memberId") Long memberId, @Param("nickname") String nickname);
 
 	int updateProfileImage(@Param("memberId") Long memberId, @Param("profile") String profile);
-}
 
+	int updateMemberStatus(@Param("memberId") Long memberId, @Param("status") String status);
+}

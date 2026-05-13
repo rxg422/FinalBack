@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.mybatis.spring.annotation.MapperScan;
 
 @MapperScan({
+	"com.jbro.auth.model.dao",
 	"com.jbro.mypage.model.dao",
 	"com.jbro.tour.model.dao"
 })

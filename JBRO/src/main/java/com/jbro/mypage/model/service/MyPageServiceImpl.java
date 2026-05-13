@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.jbro.auth.model.service.LoginMemberProvider;
 import com.jbro.mypage.model.dao.MyPageDAO;
 import com.jbro.mypage.model.vo.MemberVo;
 import com.jbro.mypage.model.vo.ProfileUpdateResponse;
@@ -21,7 +22,6 @@ import com.jbro.mypage.model.vo.ProfileUpdateResponse;
 @Service
 public class MyPageServiceImpl implements MyPageService {
 
-	private static final Long TEMP_LOGIN_MEMBER_ID = 1L;
 	private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
 	private static final Map<String, String> EXTENSIONS_BY_CONTENT_TYPE = Map.of(
 		"image/jpeg", ".jpg",
@@ -30,10 +30,16 @@ public class MyPageServiceImpl implements MyPageService {
 	);
 
 	private final MyPageDAO myPageDAO;
+	private final LoginMemberProvider loginMemberProvider;
 	private final String serverPort;
 
-	public MyPageServiceImpl(MyPageDAO myPageDAO, @Value("${server.port:8080}") String serverPort) {
+	public MyPageServiceImpl(
+		MyPageDAO myPageDAO,
+		LoginMemberProvider loginMemberProvider,
+		@Value("${server.port:8080}") String serverPort
+	) {
 		this.myPageDAO = myPageDAO;
+		this.loginMemberProvider = loginMemberProvider;
 		this.serverPort = serverPort;
 	}
 
@@ -64,23 +70,26 @@ public class MyPageServiceImpl implements MyPageService {
 
 	@Override
 	public MemberVo getMyPageProfile() {
-		return myPageDAO.selectMyPageProfile(TEMP_LOGIN_MEMBER_ID);
+		Long memberId = loginMemberProvider.getLoginMemberId();
+		return myPageDAO.selectMyPageProfile(memberId);
 	}
 
 	@Override
 	public boolean isNicknameAvailable(String nickname) {
-		return myPageDAO.countByNicknameExceptId(nickname, TEMP_LOGIN_MEMBER_ID) == 0;
+		Long memberId = loginMemberProvider.getLoginMemberId();
+		return myPageDAO.countByNicknameExceptId(nickname, memberId) == 0;
 	}
 
 	@Override
 	public MemberVo modifyMyPageNickname(String nickname) {
-		myPageDAO.updateProfileNickname(TEMP_LOGIN_MEMBER_ID, nickname);
-		return myPageDAO.selectMyPageProfile(TEMP_LOGIN_MEMBER_ID);
+		Long memberId = loginMemberProvider.getLoginMemberId();
+		myPageDAO.updateProfileNickname(memberId, nickname);
+		return myPageDAO.selectMyPageProfile(memberId);
 	}
 
 	@Override
 	public ProfileUpdateResponse updateProfileImage(MultipartFile profileImage, HttpSession session) {
-		Long memberId = getLoginMemberId(session);
+		Long memberId = loginMemberProvider.getLoginMemberId(session);
 
 		if (profileImage == null || profileImage.isEmpty()) {
 			return new ProfileUpdateResponse(false, "업로드할 프로필 이미지를 선택해주세요.", null);
@@ -111,22 +120,9 @@ public class MyPageServiceImpl implements MyPageService {
 		return new ProfileUpdateResponse(true, "프로필 이미지가 수정되었습니다.", profile);
 	}
 
-	private Long getLoginMemberId(HttpSession session) {
-		Object sessionMemberId = session.getAttribute("memberId");
-
-		if (sessionMemberId instanceof Long memberId) {
-			return memberId;
-		}
-
-		if (sessionMemberId instanceof Integer memberId) {
-			return memberId.longValue();
-		}
-
-		if (sessionMemberId instanceof String memberId) {
-			return Long.parseLong(memberId);
-		}
-
-		return TEMP_LOGIN_MEMBER_ID;
+	@Override
+	public boolean withdrawMember(HttpSession session) {
+		Long memberId = loginMemberProvider.getLoginMemberId(session);
+		return myPageDAO.updateMemberStatus(memberId, "N") > 0;
 	}
 }
-

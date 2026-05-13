@@ -28,5 +28,6 @@ public interface MyPageService {
 	MemberVo modifyMyPageNickname(String nickname);
 
 	ProfileUpdateResponse updateProfileImage(MultipartFile profileImage, HttpSession session);
-}
 
+	boolean withdrawMember(HttpSession session);
+}
