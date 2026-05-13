@@ -80,4 +80,3 @@ public class MyPageProfileController {
 		return ResponseEntity.ok(response);
 	}
 }
-
