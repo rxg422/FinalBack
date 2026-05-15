@@ -11,9 +11,7 @@ import org.mybatis.spring.annotation.MapperScan;
 })
 @SpringBootApplication(scanBasePackages = {"com.jbro"})
 public class JbroApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(JbroApplication.class, args);
 	}
-
 }
