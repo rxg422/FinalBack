@@ -1,242 +1,177 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!DOCTYPE mapper
-PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.tourList.mapper.TourListMapper">
 
-<mapper namespace="tourListMapper">
-
-    <!-- RESULT MAP -->
-    <resultMap id="tourListResultMap"
-               type="com.jbro.tourList.model.vo.TourList">
-
-        <id property="tourPlaceId"
-            column="TOUR_PLACE_ID"/>
-
-        <result property="contentId"
-                column="CONTENT_ID"/>
-
-        <result property="contentTypeId"
-                column="CONTENT_TYPE_ID"/>
-
-        <result property="title"
-                column="TITLE"/>
-
-        <result property="firstImage"
-                column="FIRST_IMAGE"/>
-
-        <result property="firstImage2"
-                column="FIRST_IMAGE2"/>
-
-        <result property="areaCode"
-                column="AREA_CODE"/>
-
-        <result property="regionName"
-                column="REGION_NAME"/>
-
-        <result property="addr1"
-                column="ADDR1"/>
-
-        <result property="addr2"
-                column="ADDR2"/>
-
-        <result property="mapX"
-                column="MAP_X"/>
-
-        <result property="mapY"
-                column="MAP_Y"/>
-
-        <result property="viewCount"
-                column="VIEW_COUNT"/>
-
-        <result property="createdAt"
-                column="CREATED_AT"/>
-
-        <result property="favoriteCount"
-                column="FAVORITE_COUNT"/>
-
-        <result property="likedYn"
-                column="LIKED_YN"/>
-
-        <result property="reviewCount"
-                column="REVIEW_COUNT"/>
-
-        <result property="categoryName"
-                column="CATEGORY_NAME"/>
-
+    <resultMap id="TourListResultMap" type="com.jbro.tourList.model.vo.TourList">
+        <id     property="contentId"      column="CONTENT_ID"/>
+        <result property="contentTypeId"  column="CONTENT_TYPE_ID"/>
+        <result property="categoryId"     column="CATEGORY_ID"/>
+        <result property="categoryName"   column="CATEGORY_NAME"/>
+        <result property="title"          column="TITLE"/>
+        <result property="firstImage"     column="FIRST_IMAGE"/>
+        <result property="firstImage2"    column="FIRST_IMAGE2"/>
+        <result property="addr1"          column="ADDR1"/>
+        <result property="addr2"          column="ADDR2"/>
+        <result property="mapX"           column="MAP_X"/>
+        <result property="mapY"           column="MAP_Y"/>
+        <result property="lDongSignguCd"  column="L_DONG_SIGNGU_CD"/>
+        <result property="lDongSignguNm"  column="L_DONG_SIGNGU_NM"/>
+        <result property="viewCount"      column="VIEW_COUNT"/>
+        <result property="favoriteCount"  column="FAVORITE_COUNT"/>
+        <result property="likedYn"        column="LIKED_YN"/>
+        <result property="reviewCount"    column="REVIEW_COUNT"/>
     </resultMap>
 
+    <sql id="searchCondition">
+        <where>
+            <if test="categoryId != null">
+                AND T.CATEGORY_ID = #{categoryId}
+            </if>
+            <if test="region != null and region != '' and region != '전체 지역'">
+                AND DBMS_LOB.INSTR(L.L_DONG_SIGNGU_NM, #{region}) > 0
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (DBMS_LOB.INSTR(T.TITLE, #{keyword}) > 0
+                  OR DBMS_LOB.INSTR(T.ADDR1, #{keyword}) > 0)
+            </if>
+        </where>
+    </sql>
 
-    <!-- 공통 FROM -->
-    <sql id="tourListBaseQuery">
+    <sql id="orderCondition">
+        <choose>
+            <when test="sort == 'latest'">
+                ORDER BY T.CONTENT_ID DESC
+            </when>
+            <otherwise>
+                ORDER BY FAV_COUNT DESC, T.CONTENT_ID DESC
+            </otherwise>
+        </choose>
+    </sql>
 
-    FROM TOUR_PLACE TP
-
-    JOIN CATEGORY C
-      ON TP.CATEGORY_ID = C.ID
-
-    LEFT JOIN (
-        SELECT
-            CONTENT_ID,
-            COUNT(*) AS FAVORITE_COUNT
-        FROM FAVORITE
-        GROUP BY CONTENT_ID
-    ) F
-    ON TP.CONTENT_ID = F.CONTENT_ID
-
-    LEFT JOIN FAVORITE MYF
-      ON TP.CONTENT_ID = MYF.CONTENT_ID
-     AND MYF.USER_ID = #{userId}
-
-    LEFT JOIN (
-        SELECT
-            CONTENT_ID,
-            COUNT(*) AS REVIEW_COUNT
-        FROM REVIEW
-        WHERE REVIEW_ACTIVE = 'Y'
-        GROUP BY CONTENT_ID
-    ) RV
-    ON TP.CONTENT_ID = RV.CONTENT_ID
-
-    WHERE 1 = 1
-
-    <if test="categoryId != null">
-        AND TP.CATEGORY_ID = #{categoryId}
-    </if>
-
-    <if test="keyword != null and keyword != ''">
-        AND TP.TITLE LIKE '%' || #{keyword} || '%'
-    </if>
-
-</sql>
-
-
-    <!-- 목록 조회 -->
-    <select id="selectTourList"
-            resultMap="tourListResultMap">
-
+    <select id="selectTourList" parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
+            resultMap="TourListResultMap">
         SELECT *
         FROM (
-
-            SELECT
-                A.*,
-                ROWNUM RN
-
+            SELECT ROWNUM AS RN, INNER_Q.*
             FROM (
-
                 SELECT
-
-                    TP.TOUR_PLACE_ID,
-                    TP.CONTENT_ID,
-                    TP.CONTENT_TYPE_ID,
-
-                    TP.TITLE,
-
-                    TP.FIRST_IMAGE,
-                    TP.FIRST_IMAGE2,
-
-                    TP.AREA_CODE,
-                    R.REGION_NAME,
-
-                    TP.ADDR1,
-                    TP.ADDR2,
-
-                    TP.MAP_X,
-                    TP.MAP_Y,
-
-                    TP.VIEW_COUNT,
-
-                    TP.CREATED_AT,
-
-                    NVL(F.FAVORITE_COUNT, 0)
-                    AS FAVORITE_COUNT,
-
-                    NVL(RV.REVIEW_COUNT, 0)
-                    AS REVIEW_COUNT,
-
-                    CASE
-                        WHEN MYF.USER_ID IS NOT NULL
-                        THEN 'Y'
-                        ELSE 'N'
-                    END AS LIKED_YN,
-
-                    CASE
-                        WHEN TP.CONTENT_TYPE_ID = '12'
-                        THEN '관광지'
-
-                        WHEN TP.CONTENT_TYPE_ID = '32'
-                        THEN '숙소'
-
-                        WHEN TP.CONTENT_TYPE_ID = '39'
-                        THEN '음식점'
-
-                        WHEN TP.CONTENT_TYPE_ID = '15'
-                        THEN '축제'
-
-                        ELSE '기타'
-                    END AS CATEGORY_NAME
-
-                <include refid="tourListBaseQuery"/>
-
-                <!-- 정렬 -->
-                <choose>
-
-                    <when test="sort == 'popular'">
-                        ORDER BY TP.VIEW_COUNT DESC
-                    </when>
-
-                    <when test="sort == 'latest'">
-                        ORDER BY TP.CREATED_AT DESC
-                    </when>
-
-                    <otherwise>
-                        ORDER BY TP.TOUR_PLACE_ID DESC
-                    </otherwise>
-
-                </choose>
-
-            ) A
-
-            WHERE ROWNUM <![CDATA[ <= ]]> #{offset} + #{limit}
-
+                    T.CONTENT_ID,
+                    T.CONTENT_TYPE_ID,
+                    T.CATEGORY_ID,
+                    C.NAME                                      AS CATEGORY_NAME,
+                    TO_CHAR(T.TITLE)                            AS TITLE,
+                    TO_CHAR(T.FIRST_IMAGE)                      AS FIRST_IMAGE,
+                    TO_CHAR(T.FIRST_IMAGE2)                     AS FIRST_IMAGE2,
+                    TO_CHAR(T.ADDR1)                            AS ADDR1,
+                    TO_CHAR(T.ADDR2)                            AS ADDR2,
+                    T.MAP_X,
+                    T.MAP_Y,
+                    T.L_DONG_SIGNGU_CD,
+                    TO_CHAR(L.L_DONG_SIGNGU_NM)                 AS L_DONG_SIGNGU_NM,
+                    T.VIEW_COUNT,
+                    COUNT(F.FAVORITE_ID)                        AS FAV_COUNT,
+                    COUNT(F.FAVORITE_ID)                        AS FAVORITE_COUNT,
+                    MAX(CASE WHEN F2.USER_ID = #{userId} THEN 'Y' ELSE 'N' END) AS LIKED_YN,
+                    COUNT(R.REVIEW_ID)                          AS REVIEW_COUNT
+                FROM TOUR_PLACE T
+                LEFT JOIN CATEGORY C  ON T.CATEGORY_ID      = C.ID
+                LEFT JOIN LDONG    L  ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+                LEFT JOIN FAVORITE F  ON T.CONTENT_ID       = F.CONTENT_ID
+                LEFT JOIN FAVORITE F2 ON T.CONTENT_ID       = F2.CONTENT_ID
+                                     AND F2.USER_ID         = #{userId}
+                LEFT JOIN REVIEW   R  ON T.CONTENT_ID       = R.CONTENT_ID
+                                     AND R.REVIEW_ACTIVE    = 'Y'
+                <include refid="searchCondition"/>
+                GROUP BY
+                    T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID,
+                    C.NAME,
+                    TO_CHAR(T.TITLE),
+                    TO_CHAR(T.FIRST_IMAGE),
+                    TO_CHAR(T.FIRST_IMAGE2),
+                    TO_CHAR(T.ADDR1),
+                    TO_CHAR(T.ADDR2),
+                    T.MAP_X, T.MAP_Y,
+                    T.L_DONG_SIGNGU_CD,
+                    TO_CHAR(L.L_DONG_SIGNGU_NM),
+                    T.VIEW_COUNT
+                <include refid="orderCondition"/>
+            ) INNER_Q
+            WHERE ROWNUM &lt;= #{offset} + #{limit}
         )
-
-        WHERE RN <![CDATA[ > ]]> #{offset}
-
+        WHERE RN > #{offset}
     </select>
 
-
-    <!-- 전체 개수 -->
-    <select id="selectTourListCount"
+    <select id="selectTourListCount" parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
             resultType="int">
-
         SELECT COUNT(*)
-
-        <include refid="tourListBaseQuery"/>
-
+        FROM TOUR_PLACE T
+        LEFT JOIN LDONG L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        <include refid="searchCondition"/>
     </select>
 
-	<select id="selectFavoriteCount" resultType="int">
-    SELECT COUNT(*)
-    FROM FAVORITE
-    WHERE USER_ID = #{userId}
-      AND CONTENT_ID = #{contentId}
-</select>
+    <select id="selectTourDetail" parameterType="long" resultMap="TourListResultMap">
+        SELECT
+            T.CONTENT_ID,
+            T.CONTENT_TYPE_ID,
+            T.CATEGORY_ID,
+            C.NAME                              AS CATEGORY_NAME,
+            TO_CHAR(T.TITLE)                    AS TITLE,
+            TO_CHAR(T.FIRST_IMAGE)              AS FIRST_IMAGE,
+            TO_CHAR(T.FIRST_IMAGE2)             AS FIRST_IMAGE2,
+            TO_CHAR(T.ADDR1)                    AS ADDR1,
+            TO_CHAR(T.ADDR2)                    AS ADDR2,
+            T.MAP_X,
+            T.MAP_Y,
+            T.L_DONG_SIGNGU_CD,
+            TO_CHAR(L.L_DONG_SIGNGU_NM)         AS L_DONG_SIGNGU_NM,
+            T.VIEW_COUNT,
+            COUNT(F.FAVORITE_ID)                AS FAVORITE_COUNT,
+            COUNT(R.REVIEW_ID)                  AS REVIEW_COUNT
+        FROM TOUR_PLACE T
+        LEFT JOIN CATEGORY C ON T.CATEGORY_ID      = C.ID
+        LEFT JOIN LDONG    L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        LEFT JOIN FAVORITE F ON T.CONTENT_ID       = F.CONTENT_ID
+        LEFT JOIN REVIEW   R ON T.CONTENT_ID       = R.CONTENT_ID
+                             AND R.REVIEW_ACTIVE   = 'Y'
+        WHERE T.CONTENT_ID = #{contentId}
+        GROUP BY
+            T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID,
+            C.NAME,
+            TO_CHAR(T.TITLE),
+            TO_CHAR(T.FIRST_IMAGE),
+            TO_CHAR(T.FIRST_IMAGE2),
+            TO_CHAR(T.ADDR1),
+            TO_CHAR(T.ADDR2),
+            T.MAP_X, T.MAP_Y,
+            T.L_DONG_SIGNGU_CD,
+            TO_CHAR(L.L_DONG_SIGNGU_NM),
+            T.VIEW_COUNT
+    </select>
 
-<insert id="insertFavorite">
-    INSERT INTO FAVORITE (
-        USER_ID,
-        CONTENT_ID
-    )
-    VALUES (
-        #{userId},
-        #{contentId}
-    )
-</insert>
+    <update id="updateViewCount" parameterType="long">
+        UPDATE TOUR_PLACE
+        SET VIEW_COUNT = NVL(VIEW_COUNT, 0) + 1
+        WHERE CONTENT_ID = #{contentId}
+    </update>
 
-<delete id="deleteFavorite">
-    DELETE FROM FAVORITE
-    WHERE USER_ID = #{userId}
-      AND CONTENT_ID = #{contentId}
-</delete>
+    <select id="selectFavoriteExists" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM FAVORITE
+        WHERE CONTENT_ID = #{contentId}
+          AND USER_ID    = #{userId}
+    </select>
+
+    <insert id="insertFavorite" parameterType="map">
+        INSERT INTO FAVORITE (FAVORITE_ID, USER_ID, CONTENT_ID, CREATED_AT)
+        VALUES (FAVORITE_SEQ.NEXTVAL, #{userId}, #{contentId}, SYSDATE)
+    </insert>
+
+    <delete id="deleteFavorite" parameterType="map">
+        DELETE FROM FAVORITE
+        WHERE CONTENT_ID = #{contentId}
+          AND USER_ID    = #{userId}
+    </delete>
+
 </mapper>

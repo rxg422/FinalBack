@@ -1,71 +1,64 @@
 package com.jbro.tourList.model.dao;
 
+import com.jbro.tourList.model.dto.TourListSearchDto;
+import com.jbro.tourList.model.vo.TourList;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.stereotype.Repository;
-
-import com.jbro.tourList.model.dto.TourListSearchDto;
-import com.jbro.tourList.model.vo.TourList;
-
-import lombok.RequiredArgsConstructor;
-
 @Repository
-@RequiredArgsConstructor
 public class TourListDaoImpl implements TourListDao {
 
-    private final SqlSessionTemplate sqlSession;
+    private static final String NS = "com.jbro.tourList.mapper.TourListMapper.";
+
+    @Autowired
+    private SqlSessionTemplate sqlSession;
 
     @Override
     public List<TourList> selectTourList(TourListSearchDto searchDto) {
-        return sqlSession.selectList(
-                "tourListMapper.selectTourList",
-                searchDto
-        );
+        return sqlSession.selectList(NS + "selectTourList", searchDto);
     }
 
     @Override
     public int selectTourListCount(TourListSearchDto searchDto) {
-        return sqlSession.selectOne(
-                "tourListMapper.selectTourListCount",
-                searchDto
-        );
-    }
-    @Override
-    public int selectFavoriteCount(Long userId, Long contentId) {
-        Map<String, Object> param = new HashMap<>();
-        param.put("userId", userId);
-        param.put("contentId", contentId);
-
-        return sqlSession.selectOne(
-                "tourListMapper.selectFavoriteCount",
-                param
-        );
+        return sqlSession.selectOne(NS + "selectTourListCount", searchDto);
     }
 
     @Override
-    public int insertFavorite(Long userId, Long contentId) {
-        Map<String, Object> param = new HashMap<>();
-        param.put("userId", userId);
-        param.put("contentId", contentId);
-
-        return sqlSession.insert(
-                "tourListMapper.insertFavorite",
-                param
-        );
+    public TourList selectTourDetail(Long contentId) {
+        return sqlSession.selectOne(NS + "selectTourDetail", contentId);
     }
 
     @Override
-    public int deleteFavorite(Long userId, Long contentId) {
-        Map<String, Object> param = new HashMap<>();
-        param.put("userId", userId);
-        param.put("contentId", contentId);
+    public int updateViewCount(Long contentId) {
+        return sqlSession.update(NS + "updateViewCount", contentId);
+    }
 
-        return sqlSession.delete(
-                "tourListMapper.deleteFavorite",
-                param
-        );
+    @Override
+    public int selectFavoriteExists(Long contentId, Long userId) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("contentId", contentId);
+        map.put("userId", userId);
+        return sqlSession.selectOne(NS + "selectFavoriteExists", map);
+    }
+
+    @Override
+    public int insertFavorite(Long contentId, Long userId) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("contentId", contentId);
+        map.put("userId", userId);
+        return sqlSession.insert(NS + "insertFavorite", map);
+    }
+
+    @Override
+    public int deleteFavorite(Long contentId, Long userId) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("contentId", contentId);
+        map.put("userId", userId);
+        return sqlSession.delete(NS + "deleteFavorite", map);
     }
 }

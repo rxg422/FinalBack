@@ -1,23 +1,22 @@
 package com.jbro.tourList.model.dto;
 
+import com.jbro.tourList.model.vo.TourList;
+import lombok.Data;
+
 import java.util.List;
 
-import com.jbro.tourList.model.vo.TourList;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class TourListResponseDto {
 
     private List<TourList> list;
-
     private int totalCount;
+    private int currentPage;  // TSX: data.currentPage
+    private int limit;        // TSX: data.limit
 
-    private int currentPage;
-
-    private int limit;
+    public TourListResponseDto(List<TourList> list, int totalCount, int currentPage, int limit) {
+        this.list = list;
+        this.totalCount = totalCount;
+        this.currentPage = currentPage;
+        this.limit = limit;
+    }
 }

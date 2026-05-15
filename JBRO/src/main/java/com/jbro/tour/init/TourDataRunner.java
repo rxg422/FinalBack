@@ -19,16 +19,17 @@ public class TourDataRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         try {
-        	System.out.println("🚀 서버 시작 - 관광 데이터 수집 시작");
-            tourService.fetchAndSaveTourData();
+        	//System.out.println("🚀 서버 시작 - 관광 데이터 수집 시작");
+           // tourService.fetchAndSaveTourData();
 
-            System.out.println("🚀 서버 시작 - 시군구 데이터 수집 시작");
-            lDongService.fetchAndSaveLDongData();
+           // System.out.println("🚀 서버 시작 - 시군구 데이터 수집 시작");
+            //lDongService.fetchAndSaveLDongData();
         }
         catch (Exception e) {
-            System.out.println("❌ 데이터 수집 실패");
-            e.printStackTrace();
+           // System.out.println("❌ 데이터 수집 실패");
+          //  e.printStackTrace();
         }
+       
 
 
         System.out.println("✅ 데이터 수집 완료");
