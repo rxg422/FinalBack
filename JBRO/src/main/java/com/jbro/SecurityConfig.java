@@ -2,10 +2,9 @@ package com.jbro;
 
 import java.util.List;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -16,6 +15,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.jbro.auth.filter.JwtAuthenticationFilter;
 import com.jbro.auth.handler.OAuth2LoginSuccessHandler;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 public class SecurityConfig {
@@ -33,36 +34,45 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		return http
-			.cors(Customizer.withDefaults())
-			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/", "/login", "/oauth2/**", "/login/oauth2/**").permitAll()
-				.requestMatchers("/api/health/**").permitAll()
-				.requestMatchers("/api/members/**").permitAll()
-				.requestMatchers("/api/users2/**").permitAll()
-				.requestMatchers("/uploads/**").permitAll()
-				.requestMatchers("/api/mypage/**").authenticated()
-				.anyRequest().authenticated()
-			)
-			.csrf(csrf -> csrf.disable())
-			.formLogin(form -> form.disable())
-			.oauth2Login(oauth2 -> oauth2
-				.successHandler(oAuth2LoginSuccessHandler)
-			)
-			.exceptionHandling(exception -> exception
-				.authenticationEntryPoint((request, response, authException) -> {
-					if (request.getRequestURI().startsWith("/api/")) {
-						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-						response.setContentType("application/json;charset=UTF-8");
-						response.getWriter().write("{\"success\":false,\"message\":\"로그인이 필요합니다.\"}");
-						return;
-					}
+	    return http
+	        .cors(Customizer.withDefaults())
+	        .authorizeHttpRequests(auth -> auth
+	            .requestMatchers("/", "/login", "/oauth2/**", "/login/oauth2/**").permitAll()
+	            .requestMatchers("/api/health/**").permitAll()
+	            .requestMatchers("/api/members/**").permitAll()
+	            .requestMatchers("/api/users2/**").permitAll()
+	            .requestMatchers("/uploads/**").permitAll()
 
-					response.sendRedirect("/login");
-				})
-			)
-			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-			.build();
+	            // 여행 목록 조회는 비로그인 허용
+	            .requestMatchers(HttpMethod.GET, "/api/tourList").permitAll()
+	            .requestMatchers(HttpMethod.GET, "/api/tourList/**").permitAll()
+
+	            // 찜하기는 로그인 필요
+	            .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
+
+	            .requestMatchers("/api/mypage/**").authenticated()
+	            .requestMatchers("/api/tour/**").authenticated()
+	            .anyRequest().authenticated()
+	        )
+	        .csrf(csrf -> csrf.disable())
+	        .formLogin(form -> form.disable())
+	        .oauth2Login(oauth2 -> oauth2
+	            .successHandler(oAuth2LoginSuccessHandler)
+	        )
+	        .exceptionHandling(exception -> exception
+	            .authenticationEntryPoint((request, response, authException) -> {
+	                if (request.getRequestURI().startsWith("/api/")) {
+	                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+	                    response.setContentType("application/json;charset=UTF-8");
+	                    response.getWriter().write("{\"success\":false,\"message\":\"로그인이 필요합니다.\"}");
+	                    return;
+	                }
+
+	                response.sendRedirect("/login");
+	            })
+	        )
+	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+	        .build();
 	}
 
 	@Bean

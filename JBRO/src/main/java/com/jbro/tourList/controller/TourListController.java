@@ -1,49 +1,49 @@
 package com.jbro.tourList.controller;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.jbro.tourList.model.dto.TourListResponseDto;
 import com.jbro.tourList.model.dto.TourListSearchDto;
 import com.jbro.tourList.model.service.TourListService;
-
-import lombok.RequiredArgsConstructor;
+import com.jbro.tourList.model.vo.TourList;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/tourList")
-@RequiredArgsConstructor
 public class TourListController {
 
-    private final TourListService tourListService;
+    @Autowired
+    private TourListService tourListService;
 
-    
+    /**
+     * GET /api/tourList
+     * ?categoryId=1&region=전주&keyword=&sort=popular&page=1&limit=6&userId=1
+     */
     @GetMapping
-    public ResponseEntity<TourListResponseDto> selectTourList(
-            TourListSearchDto searchDto
-    ) {
-        TourListResponseDto result = tourListService.selectTourList(searchDto);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<TourListResponseDto> getTourList(TourListSearchDto searchDto) {
+        TourListResponseDto response = tourListService.getTourList(searchDto);
+        return ResponseEntity.ok(response);
     }
 
+    /**
+     * GET /api/tourList/detail/{contentId}
+     */
+    @GetMapping("/detail/{contentId}")
+    public ResponseEntity<TourList> getTourDetail(@PathVariable Long contentId) {
+        TourList detail = tourListService.getTourDetail(contentId);
+        if (detail == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(detail);
+    }
+
+    /**
+     * POST /api/tourList/favorite/{contentId}?userId={userId}
+     * 응답: "INSERT" or "DELETE" (text/plain)
+     */
     @PostMapping("/favorite/{contentId}")
-    public ResponseEntity<?> toggleFavorite(
+    public ResponseEntity<String> toggleFavorite(
             @PathVariable Long contentId,
-            @RequestParam(required = false) Long userId
-    ) {
-        if (userId == null) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("LOGIN_REQUIRED");
-        }
-
-        String result = tourListService.toggleFavorite(userId, contentId);
-
+            @RequestParam Long userId) {
+        String result = tourListService.toggleFavorite(contentId, userId);
         return ResponseEntity.ok(result);
     }
 }
