@@ -64,7 +64,6 @@ public class TourApiDaoImpl implements TourApiDao {
 
 	@Override
 	public void insertShopIntro(ShopIntroDto shopping) {
-		System.out.println(shopping);
 		session.insert("tourMapper.insertShopIntro", shopping);
 	}
 

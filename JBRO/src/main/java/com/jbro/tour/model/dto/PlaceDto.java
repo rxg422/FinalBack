@@ -1,5 +1,7 @@
 package com.jbro.tour.model.dto;
 
+import java.util.Date;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,6 +20,7 @@ public class PlaceDto {
 	private double mapY; // 위도
 	private int lDongRegnCd; // 시도 코드
 	private int lDongSignguCd; // 시군구 코드
+	private String createdTime;
 
 	private String tel;	// 전화번호
 	private String telName; // 전화명

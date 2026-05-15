@@ -36,7 +36,7 @@ public class MyPageServiceImpl implements MyPageService {
 	public MyPageServiceImpl(
 		MyPageDAO myPageDAO,
 		LoginMemberProvider loginMemberProvider,
-		@Value("${server.port:8080}") String serverPort
+		@Value("${server.port:8081}") String serverPort
 	) {
 		this.myPageDAO = myPageDAO;
 		this.loginMemberProvider = loginMemberProvider;

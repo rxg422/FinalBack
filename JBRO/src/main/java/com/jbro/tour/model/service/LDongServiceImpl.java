@@ -25,7 +25,7 @@ public class LDongServiceImpl implements LDongService {
 	private final TourApiDao tourApiDao;
 	
 	private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
-	private static final String SERVICE_KEY = "761334040e862c2bc51543d43550c5d1c8b97896feafc2531642e8ae927b0f6c";
+	private static final String SERVICE_KEY = "f9627dd46c0c9f97d293b27fdb6767a789bb707a1fb167cc9b556922b080c79d";
 	
 	@Override
 	public void fetchAndSaveLDongData() {
@@ -33,19 +33,25 @@ public class LDongServiceImpl implements LDongService {
 		int numOfRows = 100;
 		int lDongRegnCd = 52;
 		
-		while(true) {
-			List<LDongDto> list = fetchLDong(pageNo, numOfRows, lDongRegnCd);
-			
-			if (list.isEmpty()) {
-				break;
+		try {
+			while(true) {
+				List<LDongDto> list = fetchLDong(pageNo, numOfRows, lDongRegnCd);
+				Thread.sleep(100);
+				
+				if (list.isEmpty()) {
+					break;
+				}
+				
+				for (LDongDto lDong : list) {
+//					tourApiDao.insertlDong(lDong);
+				}
+				
+				pageNo++;
 			}
-			
-			for (LDongDto lDong : list) {
-				tourApiDao.insertlDong(lDong);
-			}
-			
-			pageNo++;
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		
 		
 	}
 	

@@ -8,7 +8,7 @@
 	</select>
 
 	<insert id="insertTourPlace">
-		INSERT INTO TOUR_PLACE VALUES(#{contentId}, #{contentTypeId}, #{categoryId}, #{title}, #{firstImage}, #{firstImage2}, #{addr1}, #{addr2}, #{mapX}, #{mapY}, #{lDongRegnCd}, #{lDongSignguCd}, #{tel}, #{telName}, #{homepage}, #{overview})
+		INSERT INTO TOUR_PLACE VALUES(#{contentId}, #{contentTypeId}, #{categoryId}, #{title}, #{firstImage}, #{firstImage2}, #{addr1}, #{addr2}, #{mapX}, #{mapY}, #{lDongRegnCd}, #{lDongSignguCd}, #{tel}, #{telName}, #{homepage}, #{overview}, #{createdTime}, DEFAULT)
 	</insert>
 	
 	<insert id="insertPlaceIntro">
@@ -20,7 +20,7 @@
 	</insert>
 	
 	<insert id="insertFestivalIntro">
-		INSERT INTO FESTIVAL_INTRO VALUES(#{contentId}, #{ageLimit}, #{bookingPlace}, #{eventedDate}, #{eventHomepage}, #{spendTimeFestival}, #{sponsor1}, #{sponsor1Tel}, #{sponsor2}, #{sponsor2Tel}, #{useTimeFestival})	
+		INSERT INTO FESTIVAL_INTRO VALUES(#{contentId}, #{ageLimit}, #{bookingPlace}, #{eventHomepage}, #{spendTimeFestival}, #{sponsor1}, #{sponsor1Tel}, #{sponsor2}, #{sponsor2Tel}, #{useTimeFestival}, #{eventStartDate}, #{eventEndDate}, #{playTime})	
 	</insert>
 
 	<insert id="insertLeportsIntro">
