@@ -1,4 +1,4 @@
-package com.jbro;
+package com.jbro.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,8 +30,8 @@ public class WebConfig implements WebMvcConfigurer{
     }
   
   	@Override
-	  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+	 public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		  Path uploadPath = Paths.get("uploads").toAbsolutePath().normalize();
-      registry.addResourceHandler("/uploads/**").addResourceLocations(uploadPath.toUri().toString() + "/");
-	  }
+		  registry.addResourceHandler("/uploads/**").addResourceLocations(uploadPath.toUri().toString() + "/");
+	 }
 }

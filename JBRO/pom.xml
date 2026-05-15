@@ -57,16 +57,16 @@
 		</dependency>
 
 		<!-- Oracle JDBC Driver -->
-<dependency>
+		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
 			<artifactId>ojdbc11</artifactId>
 			<scope>runtime</scope>
-
-
-		
-
 		</dependency>
-
+		<dependency>
+			<groupId>com.oracle.database.jdbc</groupId>
+			<artifactId>ojdbc11</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<!-- MySQL JDBC Driver -->
 		<dependency>
 			<groupId>com.mysql</groupId>

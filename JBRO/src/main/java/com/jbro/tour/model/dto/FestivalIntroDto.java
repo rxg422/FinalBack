@@ -8,7 +8,9 @@ public class FestivalIntroDto {
 	private int contentId;
 	private String ageLimit;			// 관람가능연령
 	private String bookingPlace;		// 예매처
-	private String eventedDate;			// 행사종료일
+	private String eventStartDate;		// 행사시작일
+	private String eventEndDate;		// 행사종료일
+	private String playTime;			// 행사 시간
 	private String eventHomepage;		// 행사홈페이지
 	private String spendTimeFestival;	// 관람소요시간
 	private String sponsor1;			// 주최자정보
