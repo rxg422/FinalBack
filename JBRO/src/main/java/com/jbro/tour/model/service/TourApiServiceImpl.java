@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -40,20 +41,21 @@ public class TourApiServiceImpl implements TourApiService {
 
 	/* 상수 정의 */
 	private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
-	private static final String SERVICE_KEY = "f9627dd46c0c9f97d293b27fdb6767a789bb707a1fb167cc9b556922b080c79d";
+	
+	@Value("${tour.api.service-key}")
+	private String serviceKey;
 
 	@Override
 	public void fetchAndSaveTourData() {
-		int areaCode = 37;
-		int pageNo = 1;
+		int pageNo = 3; // 8
 		int numOfRows = 100;
 		int lDongRegnCd = 52;
-
+		
 		List<PlaceDto> placeList;
 		try {
-			while (true) {
+			while (pageNo <= 9) {
 				/* 관광 목록 조회 */
-				placeList = getTourPlaceList(areaCode, pageNo, numOfRows);
+				placeList = getTourPlaceList(lDongRegnCd, pageNo, numOfRows);
 
 				Thread.sleep(100);
 
@@ -93,17 +95,16 @@ public class TourApiServiceImpl implements TourApiService {
 	}
 
 	/* 관광 목록 조회 */
-	private List<PlaceDto> getTourPlaceList(int areaCode, int pageNo, int numOfRows) {
+	private List<PlaceDto> getTourPlaceList(int lDongRegnCd, int pageNo, int numOfRows) {
 		URI uri = UriComponentsBuilder
 				.fromHttpUrl(BASE_URL + "/areaBasedList2")
 				.queryParam("numOfRows", numOfRows)
 				.queryParam("pageNo", pageNo)
 				.queryParam("MobileOS", "ETC")
 				.queryParam("MobileApp", "JBRO")
-				.queryParam("serviceKey", SERVICE_KEY)
+				.queryParam("serviceKey", serviceKey)
 				.queryParam("_type", "json")
-				.queryParam("areaCode", areaCode)
-				.queryParam("contentTypeId", 15)
+				.queryParam("lDongRegnCd", lDongRegnCd)
 				.build(true).toUri();
 
 		String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
@@ -161,7 +162,7 @@ public class TourApiServiceImpl implements TourApiService {
 	private void savePlace(PlaceDto dto) {
 		try {
 			URI uri = UriComponentsBuilder.fromHttpUrl(BASE_URL + "/detailCommon2").queryParam("MobileOS", "ETC")
-					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", SERVICE_KEY).queryParam("_type", "json")
+					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", serviceKey).queryParam("_type", "json")
 					.queryParam("contentId", dto.getContentId()).build(true).toUri();
 
 			String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
@@ -190,7 +191,7 @@ public class TourApiServiceImpl implements TourApiService {
 	private void saveIntro(int contentId, int contentTypeId) {
 		try {
 			URI uri = UriComponentsBuilder.fromHttpUrl(BASE_URL + "/detailIntro2").queryParam("MobileOS", "ETC")
-					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", SERVICE_KEY).queryParam("_type", "json")
+					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", serviceKey).queryParam("_type", "json")
 					.queryParam("contentId", contentId).queryParam("contentTypeId", contentTypeId).build(true).toUri();
 
 			String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
@@ -346,7 +347,7 @@ public class TourApiServiceImpl implements TourApiService {
 	private void saveImg(int contentId) {
 		try {
 			URI uri = UriComponentsBuilder.fromHttpUrl(BASE_URL + "/detailImage2").queryParam("MobileOS", "ETC")
-					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", SERVICE_KEY).queryParam("_type", "json")
+					.queryParam("MobileApp", "JBRO").queryParam("serviceKey", serviceKey).queryParam("_type", "json")
 					.queryParam("contentId", contentId).build(true).toUri();
 
 			String response = webClient.get().uri(uri).retrieve().bodyToMono(String.class).block();
