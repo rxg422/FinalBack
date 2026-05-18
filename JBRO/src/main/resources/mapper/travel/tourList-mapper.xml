@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jbro.tourList.mapper.TourListMapper">
+
+    <select id="selectTourList"
+            parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
+            resultType="com.jbro.tourList.model.vo.TourList">
+        SELECT
+            T.CONTENT_ID,
+            T.CONTENT_TYPE_ID,
+            T.CATEGORY_ID,
+            C.NAME              AS CATEGORY_NAME,
+            T.TITLE,
+            T.FIRST_IMAGE,
+            T.ADDR1,
+            T.ADDR2,
+            T.MAP_X,
+            T.MAP_Y,
+            T.VIEW_COUNT,
+            T.CREATED_TIME,
+            L.L_DONG_SIGNGU_NM  AS REGION_NAME,
+            COUNT(DISTINCT F.FAVORITE_ID) AS FAVORITE_COUNT,
+            COUNT(DISTINCT R.REVIEW_ID)   AS REVIEW_COUNT,
+            CASE WHEN SUM(CASE WHEN F2.USER_ID = #{userId} THEN 1 ELSE 0 END) > 0
+                 THEN 'Y' ELSE 'N' END AS LIKED_YN
+        FROM TOUR_PLACE T
+        LEFT JOIN LDONG    L  ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        LEFT JOIN CATEGORY C  ON T.CATEGORY_ID      = C.ID
+        LEFT JOIN FAVORITE F  ON T.CONTENT_ID        = F.CONTENT_ID
+        LEFT JOIN REVIEW   R  ON T.CONTENT_ID        = R.CONTENT_ID AND R.REVIEW_ACTIVE = 'Y'
+        LEFT JOIN FAVORITE F2 ON T.CONTENT_ID        = F2.CONTENT_ID AND F2.USER_ID = #{userId}
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (T.TITLE LIKE CONCAT('%', #{keyword}, '%')
+                  OR T.ADDR1 LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND T.CATEGORY_ID = #{categoryId}
+            </if>
+            <if test="regionCd != null">
+                AND T.L_DONG_SIGNGU_CD IN (
+                    <choose>
+                        <when test="regionCd == 110">
+                            110, 111, 113
+                        </when>
+                        <otherwise>
+                            #{regionCd}
+                        </otherwise>
+                    </choose>
+                )
+            </if>
+        </where>
+        GROUP BY
+            T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID, C.NAME,
+            T.TITLE, T.FIRST_IMAGE, T.ADDR1, T.ADDR2,
+            T.MAP_X, T.MAP_Y, T.VIEW_COUNT, T.CREATED_TIME,
+            L.L_DONG_SIGNGU_NM
+        <choose>
+            <when test="sortType == 'popular'">
+                ORDER BY FAVORITE_COUNT DESC
+            </when>
+            <otherwise>
+                ORDER BY T.CREATED_TIME DESC
+            </otherwise>
+        </choose>
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectTourListCount"
+            parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM TOUR_PLACE T
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (T.TITLE LIKE CONCAT('%', #{keyword}, '%')
+                  OR T.ADDR1 LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="categoryId != null">
+                AND T.CATEGORY_ID = #{categoryId}
+            </if>
+            <if test="regionCd != null">
+                AND T.L_DONG_SIGNGU_CD IN (
+                    <choose>
+                        <when test="regionCd == 110">
+                            110, 111, 113
+                        </when>
+                        <otherwise>
+                            #{regionCd}
+                        </otherwise>
+                    </choose>
+                )
+            </if>
+        </where>
+    </select>
+
+    <select id="selectTourDetail"
+            parameterType="long"
+            resultType="com.jbro.tourList.model.vo.TourList">
+        SELECT
+            T.*,
+            L.L_DONG_SIGNGU_NM AS REGION_NAME,
+            C.NAME             AS CATEGORY_NAME,
+            COUNT(DISTINCT F.FAVORITE_ID) AS FAVORITE_COUNT,
+            COUNT(DISTINCT R.REVIEW_ID)   AS REVIEW_COUNT
+        FROM TOUR_PLACE T
+        LEFT JOIN LDONG    L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        LEFT JOIN CATEGORY C ON T.CATEGORY_ID      = C.ID
+        LEFT JOIN FAVORITE F ON T.CONTENT_ID        = F.CONTENT_ID
+        LEFT JOIN REVIEW   R ON T.CONTENT_ID        = R.CONTENT_ID AND R.REVIEW_ACTIVE = 'Y'
+        WHERE T.CONTENT_ID = #{contentId}
+        GROUP BY T.CONTENT_ID
+    </select>
+
+    <update id="updateViewCount" parameterType="long">
+        UPDATE TOUR_PLACE
+        SET VIEW_COUNT = VIEW_COUNT + 1
+        WHERE CONTENT_ID = #{contentId}
+    </update>
+
+    <select id="selectFavoriteExists" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM FAVORITE
+        WHERE CONTENT_ID = #{contentId}
+          AND USER_ID    = #{userId}
+    </select>
+
+    <insert id="insertFavorite" parameterType="map">
+        INSERT INTO FAVORITE (USER_ID, CONTENT_ID, CREATED_AT)
+        VALUES (#{userId}, #{contentId}, NOW())
+    </insert>
+
+    <delete id="deleteFavorite" parameterType="map">
+        DELETE FROM FAVORITE
+        WHERE CONTENT_ID = #{contentId}
+          AND USER_ID    = #{userId}
+    </delete>
+
+</mapper>

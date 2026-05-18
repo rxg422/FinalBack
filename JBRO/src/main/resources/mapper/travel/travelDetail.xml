@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jbro.tourDetail.mapper.TravelDetailMapper">
+
+    <!-- 장소 기본 정보 -->
+    <select id="selectPlace" parameterType="long" resultType="com.jbro.tour.model.dto.PlaceDto">
+        SELECT CONTENT_ID      AS contentId,
+               CONTENT_TYPE_ID AS contentTypeId,
+               CATEGORY_ID     AS categoryId,
+               TITLE,
+               FIRST_IMAGE     AS firstImage,
+               ADDR1,
+               ADDR2,
+               MAP_X           AS mapX,
+               MAP_Y           AS mapY,
+               TEL,
+               HOMEPAGE,
+               OVERVIEW
+        FROM TOUR_PLACE
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 이미지 목록 -->
+    <select id="selectImages" parameterType="long" resultType="com.jbro.tour.model.dto.PlaceImageDto">
+        SELECT CONTENT_ID    AS contentId,
+               IMG_NAME      AS imgName,
+               ORIGIN_IMG_URL AS originImgUrl,
+               SERIAL_NUM    AS serialNum,
+               SMALL_IMAGE_URL AS smallImageUrl
+        FROM PLACE_IMG
+        WHERE CONTENT_ID = #{contentId}
+        ORDER BY SERIAL_NUM
+    </select>
+
+    <!-- 찜 카운트 -->
+    <select id="countFavorite" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM FAVORITE WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 리뷰 카운트 -->
+    <select id="countReview" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM REVIEW
+        WHERE CONTENT_ID = #{contentId} AND REVIEW_ACTIVE = 'Y'
+    </select>
+
+    <!-- 찜 여부 -->
+    <select id="isFavorited" parameterType="map" resultType="int">
+        SELECT COUNT(*) FROM FAVORITE
+        WHERE CONTENT_ID = #{contentId} AND USER_ID = #{userId}
+    </select>
+
+    <!-- 관광지 상세 -->
+    <select id="selectPlaceIntro" parameterType="long" resultType="com.jbro.tour.model.dto.PlaceIntroDto">
+        SELECT CONTENT_ID   AS contentId,
+               INFO_CENTER  AS infoCenter,
+               OPEN_DATE    AS openDate,
+               PARKING,
+               REST_DATE    AS restDate,
+               USE_SEASON   AS useSeason,
+               USE_TIME     AS useTime
+        FROM PLACE_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 문화시설 상세 -->
+    <select id="selectCultureIntro" parameterType="long" resultType="com.jbro.tour.model.dto.CultureIntroDto">
+        SELECT CONTENT_ID          AS contentId,
+               INFO_CENTER_CULTURE AS infoCenterCulture,
+               PARKING_CULTURE     AS parkingCulture,
+               PARKING_FEE         AS parkingFee,
+               REST_DATE_CULTURE   AS restDateCulture,
+               USE_FEE             AS useFee,
+               USE_TIME_CULTUE     AS useTimeCulture,
+               SPEND_TIME          AS spendTime
+        FROM CULTURE_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 축제 상세 -->
+    <select id="selectFestivalIntro" parameterType="long" resultType="com.jbro.tour.model.dto.FestivalIntroDto">
+        SELECT CONTENT_ID           AS contentId,
+               AGE_LIMIT            AS ageLimit,
+               BOOKING_PLACE        AS bookingPlace,
+               DATE_FORMAT(EVENT_START_DATE, '%Y-%m-%d') AS eventStartDate,
+               DATE_FORMAT(EVENT_END_DATE,   '%Y-%m-%d') AS eventEndDate,
+               PLAY_TIME            AS playTime,
+               EVENT_HOMEPAGE       AS eventHomepage,
+               SPEND_TIME_FESTIVAL  AS spendTimeFestival,
+               SPONSOR1,
+               SPONSOR1_TEL         AS sponsor1Tel,
+               SPONSOR2,
+               SPONSOR2_TEL         AS sponsor2Tel,
+               USE_TIME_FESTIVAL    AS useTimeFestival
+        FROM FESTIVAL_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 레포츠 상세 -->
+    <select id="selectLeportsIntro" parameterType="long" resultType="com.jbro.tour.model.dto.LeportsIntroDto">
+        SELECT CONTENT_ID              AS contentId,
+               EXP_AGE_RANGE_LEPORTS  AS expAgeRangeLeports,
+               INFO_CENTER_LEPOSRTS   AS infoCenterLeports,
+               OPEN_PERIOD            AS openPeriod,
+               PARKING_LEPORTS        AS parkingLeports,
+               PARKING_FEE_LEPORTS    AS parkingFeeLeports,
+               RESERVATION
+        FROM LEPORTS_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 숙박 상세 -->
+    <select id="selectLodgingIntro" parameterType="long" resultType="com.jbro.tour.model.dto.LodgingIntroDto">
+        SELECT CONTENT_ID           AS contentId,
+               ACCOM_COUNT_LODGING  AS accomCountLodging,
+               CHECK_IN_TIME        AS checkInTime,
+               CHECK_OUT_TIME       AS checkOutTime,
+               CHK_COOKING          AS chkCooking,
+               FOOD_PLACE           AS foodPlace,
+               INFO_CENTER_LODGING  AS infoCenterLodging,
+               PARKING_LODGING      AS parkingLodging,
+               PICKUP,
+               ROOM_COUNT           AS roomCount,
+               RESERVATION_LODGING  AS reservationLodging,
+               RESERVATION_URL      AS reservationUrl,
+               ROOM_TYPE            AS roomType,
+               SCALE_LODGING        AS scaleLodging,
+               SUB_FACILITY         AS subFacility,
+               BARBECUE, BEAUTY, BEVERAGE, BICYCLE, CAMPFIRE,
+               FITNESS, KARAOKE, PUBLIC_BATH AS publicBath,
+               PUBLIC_PC AS publicPc, SAUNA, SEMINAR, SPORTS,
+               REFUND_REGULATION    AS refundRegulation
+        FROM LODGING_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 쇼핑 상세 -->
+    <select id="selectShopIntro" parameterType="long" resultType="com.jbro.tour.model.dto.ShopIntroDto">
+        SELECT CONTENT_ID            AS contentId,
+               CULTURE_CENTER        AS cultureCenter,
+               FAIR_DAY              AS fairDay,
+               INFO_CENTER_SHOPPING  AS infoCenterShopping,
+               OPEN_DATE_SHOPPING    AS openDateShopping,
+               OPEN_TIME             AS openTime,
+               PARKING_SHOPPING      AS parkingShopping,
+               REST_DATE_SHOPPING    AS restDateShopping,
+               RESTROOM,
+               SHOP_GUIDE            AS shopGuide
+        FROM SHOP_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 음식점 상세 -->
+    <select id="selectFoodIntro" parameterType="long" resultType="com.jbro.tour.model.dto.FoodIntroDto">
+        SELECT CONTENT_ID       AS contentId,
+               FIRST_MENU       AS firstMenu,
+               INFO_CENTER_FOOD AS infoCenterFood,
+               KIDS_FACILITY    AS kidsFacility,
+               OPEN_TIME_FOOD   AS openTimeFood,
+               PACKING,
+               PARKING_FOOD     AS parkingFood,
+               RESERVATION_FOOD AS reservationFood,
+               REST_DATE_FOOD   AS restDateFood
+        FROM FOOD_INTRO
+        WHERE CONTENT_ID = #{contentId}
+    </select>
+
+    <!-- 주변 여행지 (Haversine 반경 5km, 최대 6개) -->
+    <select id="selectNearbyPlaces" parameterType="map" resultType="com.jbro.tourDetail.model.vo.NearbyPlaceVo">
+        SELECT CONTENT_ID   AS contentId,
+               TITLE,
+               FIRST_IMAGE  AS firstImage,
+               ADDR1,
+               CATEGORY_ID  AS categoryId
+        FROM TOUR_PLACE
+        WHERE CONTENT_ID != #{excludeId}
+          AND (
+              6371 * ACOS(
+                  COS(RADIANS(#{mapY})) * COS(RADIANS(MAP_Y)) *
+                  COS(RADIANS(MAP_X) - RADIANS(#{mapX})) +
+                  SIN(RADIANS(#{mapY})) * SIN(RADIANS(MAP_Y))
+              )
+          ) &lt;= 5
+        ORDER BY (
+            6371 * ACOS(
+                COS(RADIANS(#{mapY})) * COS(RADIANS(MAP_Y)) *
+                COS(RADIANS(MAP_X) - RADIANS(#{mapX})) +
+                SIN(RADIANS(#{mapY})) * SIN(RADIANS(MAP_Y))
+            )
+        )
+        LIMIT 6
+    </select>
+
+    <!-- 리뷰 목록 -->
+    <select id="selectReviews" parameterType="map" resultType="map">
+        SELECT R.REVIEW_ID    AS reviewId,
+               R.USER_ID      AS userId,
+               U.NICKNAME     AS nickname,
+               U.PROFILE      AS profileImg,
+               R.CONTENT,
+               R.REVIEW_IMAGE AS reviewImage,
+               DATE_FORMAT(R.CREATED_AT, '%Y-%m-%d %H:%i') AS createdAt
+        FROM REVIEW R
+            JOIN USERS U ON R.USER_ID = U.NO
+        WHERE R.CONTENT_ID   = #{contentId}
+          AND R.REVIEW_ACTIVE = 'Y'
+        ORDER BY R.CREATED_AT DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 리뷰 등록 -->
+    <insert id="insertReview" parameterType="map">
+        INSERT INTO REVIEW (USER_ID, CONTENT_ID, CONTENT, REVIEW_IMAGE, CREATED_AT)
+        VALUES (#{userId}, #{contentId}, #{content}, #{imageUrl}, NOW())
+    </insert>
+
+    <!-- 리뷰 수정 (본인만) -->
+    <update id="updateReview" parameterType="map">
+        UPDATE REVIEW
+        SET CONTENT = #{content}
+        WHERE REVIEW_ID = #{reviewId}
+          AND USER_ID   = #{userId}
+    </update>
+
+    <!-- 리뷰 소프트 삭제 (본인만) -->
+    <update id="deleteReview" parameterType="map">
+        UPDATE REVIEW
+        SET REVIEW_ACTIVE = 'N'
+        WHERE REVIEW_ID = #{reviewId}
+          AND USER_ID   = #{userId}
+    </update>
+
+    <!-- 찜 등록 -->
+    <insert id="insertFavorite" parameterType="map">
+        INSERT INTO FAVORITE (USER_ID, CONTENT_ID, CREATED_AT)
+        VALUES (#{userId}, #{contentId}, NOW())
+    </insert>
+
+    <!-- 찜 취소 -->
+    <delete id="deleteFavorite" parameterType="map">
+        DELETE FROM FAVORITE
+        WHERE USER_ID = #{userId} AND CONTENT_ID = #{contentId}
+    </delete>
+
+    <!-- 신고 등록 -->
+    <insert id="insertReport" parameterType="map">
+        INSERT INTO REPORT (USER_ID, REVIEW_ID, REPORT_TYPE, REASON, CREATED_AT)
+        VALUES (#{userId}, #{reviewId}, #{reportType}, #{reason}, NOW())
+    </insert>
+
+</mapper>

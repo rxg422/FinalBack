@@ -1,12 +1,15 @@
 package com.jbro.tourList.model.vo;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 public class TourList {
     private Long contentId;
-    private Long contentTypeId;
-    private Long categoryId;
+    private Integer contentTypeId;
+    private Integer categoryId;
     private String categoryName;
     private String title;
     private String firstImage;
@@ -15,14 +18,18 @@ public class TourList {
     private String addr2;
     private Double mapX;
     private Double mapY;
-    private Long lDongSignguCd;
-    private String lDongSignguNm;
+    private Integer lDongRegnCd;
+    private Integer lDongSignguCd;
+    private String tel;
+    private String telName;
+    private String homepage;
+    private String overview;
+    private LocalDateTime createdTime;
     private Long viewCount;
+    private String regionName;
 
-    // 찜
-    private Long favoriteCount;
-    private String likedYn; // "Y" / "N"
-
-    // 리뷰
-    private Long reviewCount;
+    // TSX에서 필요한 필드
+    private int favoriteCount;
+    private String likedYn = "N"; // "Y" | "N"
+    private int reviewCount;
 }

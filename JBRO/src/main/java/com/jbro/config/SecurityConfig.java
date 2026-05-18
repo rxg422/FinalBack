@@ -43,15 +43,28 @@ public class SecurityConfig {
 	            .requestMatchers("/api/users2/**").permitAll()
 	            .requestMatchers("/uploads/**").permitAll()
 
-	            // 여행 목록 조회는 비로그인 허용
+	         // 여행 목록 조회는 비로그인 허용
 	            .requestMatchers(HttpMethod.GET, "/api/tourList").permitAll()
 	            .requestMatchers(HttpMethod.GET, "/api/tourList/**").permitAll()
-
 	            // 찜하기는 로그인 필요
 	            .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
+	            // 여행 상세 조회는 비로그인 허용
+	            .requestMatchers(HttpMethod.GET, "/api/tourDetail/**").permitAll()
+	            // 찜/리뷰/신고는 로그인 필요
+	            //.requestMatchers(HttpMethod.POST, "/api/tourDetail/*/favorite").authenticated()
+	            //.requestMatchers(HttpMethod.POST, "/api/tourDetail/*/reviews").authenticated()
+	            //.requestMatchers(HttpMethod.PUT, "/api/tourDetail/reviews/**").authenticated()
+	            //.requestMatchers(HttpMethod.DELETE, "/api/tourDetail/reviews/**").authenticated()
+	            //.requestMatchers(HttpMethod.POST, "/api/tourDetail/reviews/*/report").authenticated()
+	         // 찜/리뷰/신고 임시 테스트용 (로그인 없이 허용)
+	            .requestMatchers(HttpMethod.POST, "/api/tourDetail/*/favorite").permitAll()
+	            .requestMatchers(HttpMethod.POST, "/api/tourDetail/*/reviews").permitAll()
+	            .requestMatchers(HttpMethod.PUT, "/api/tourDetail/reviews/**").permitAll()
+	            .requestMatchers(HttpMethod.DELETE, "/api/tourDetail/reviews/**").permitAll()
+	            .requestMatchers(HttpMethod.POST, "/api/tourDetail/reviews/*/report").permitAll()
 
 	            .requestMatchers("/api/mypage/**").authenticated()
-	            .requestMatchers("/api/tour/**").authenticated()
+	           // .requestMatchers("/api/tour/**").authenticated()
 	            .anyRequest().authenticated()
 	        )
 	        .csrf(csrf -> csrf.disable())

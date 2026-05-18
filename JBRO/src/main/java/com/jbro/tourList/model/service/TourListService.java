@@ -5,11 +5,7 @@ import com.jbro.tourList.model.dto.TourListSearchDto;
 import com.jbro.tourList.model.vo.TourList;
 
 public interface TourListService {
-
     TourListResponseDto getTourList(TourListSearchDto searchDto);
-
     TourList getTourDetail(Long contentId);
-
-    // TSX: 응답 "INSERT" or "DELETE" 문자열 반환
-    String toggleFavorite(Long contentId, Long userId);
+    String toggleFavorite(Long contentId, Long userId); // "INSERT" or "DELETE" 반환
 }
