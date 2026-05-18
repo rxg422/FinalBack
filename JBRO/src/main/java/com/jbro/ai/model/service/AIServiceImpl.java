@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AIServiceImpl {
+public class AIServiceImpl implements AIService {
 	
 	public List<AIRecDto> aiRecommend(List<AIRecDto> request) {
 		return null;
