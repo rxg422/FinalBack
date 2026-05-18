@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="aiMapper">
+
+	<select id="selectPlaceList" resultType="AIRecDto">
+		SELECT CONTENT_ID, TITLE, FIRST_IMAGE2, ADDR1, ADDR2
+		FROM TOUR_PLACE
+		WHERE L_DONG_SIGNGU_CD IN
+		<foreach collection="array" item="areaCode" open="(" separator="," close=")">
+			#{areaCode}
+		</foreach> 
+		ORDER BY VIEW_COUNT
+		LIMIT 30;
+	</select>
+	
+</mapper>

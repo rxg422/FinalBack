@@ -33,9 +33,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	) throws ServletException, IOException {
 		String token = resolveBearerToken(request);
 
-		if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+		if (token != null) {
 			try {
 				Long memberId = jwtTokenProvider.getMemberId(token);
+				System.out.println("🔐 JWT 파싱 성공 - memberId: " + memberId);
 				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 					memberId,
 					null,
@@ -43,8 +44,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 				);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 			} catch (RuntimeException exception) {
+				System.out.println("❌ JWT 파싱 실패: " + exception.getMessage());
+				exception.printStackTrace();
 				SecurityContextHolder.clearContext();
 			}
+		} else {
+			System.out.println("⚠️ 토큰 없음");
 		}
 
 		filterChain.doFilter(request, response);

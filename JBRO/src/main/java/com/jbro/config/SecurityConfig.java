@@ -81,7 +81,7 @@ public class SecurityConfig {
 	                    return;
 	                }
 
-	                response.sendRedirect("/login");
+	                response.sendRedirect("http://localhost:3000");
 	            })
 	        )
 	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
@@ -93,9 +93,13 @@ public class SecurityConfig {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(List.of(
 			"http://localhost:3000",
+			"http://localhost:3001",
 			"http://127.0.0.1:3000",
+			"http://127.0.0.1:3001",
 			"http://192.168.10.29:3000",
-			"http://192.168.10.28:3000"
+			"http://192.168.10.29:3001",
+			"http://192.168.10.28:3000",
+			"http://192.168.10.28:3001"
 		));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));

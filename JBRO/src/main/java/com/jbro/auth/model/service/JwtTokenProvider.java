@@ -19,15 +19,23 @@ import io.jsonwebtoken.security.Keys;
 public class JwtTokenProvider {
 
 	private final Key secretKey;
+	private final Key refreshSecretKey;
 	private final long expirationMillis;
+	private final long refreshExpirationMillis;
 
 	public JwtTokenProvider(
 		@Value("${jwt.secret}") String secret,
-		@Value("${jwt.access-token-expiration-millis:3600000}") long expirationMillis
+		@Value("${jwt.refresh-secret}") String refreshSecret,
+		@Value("${jwt.access-token-expiration-millis:3600000}") long 
+		expirationMillis,
+		@Value("${jwt.refresh-token-expiration-millis:604800000}") long
+		refreshExpirationMillis //7일
 	) {
-		this.secretKey = Keys.hmacShaKeyFor(resolveSecretBytes(secret));
-		this.expirationMillis = expirationMillis;
-	}
+        this.secretKey = Keys.hmacShaKeyFor(resolveSecretBytes(secret));
+        this.refreshSecretKey = Keys.hmacShaKeyFor(resolveSecretBytes(refreshSecret)); 
+        this.expirationMillis = expirationMillis;
+        this.refreshExpirationMillis = refreshExpirationMillis;  
+    }
 
 	public String createAccessToken(MemberVo member) {
 		Instant now = Instant.now();
@@ -47,6 +55,45 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
+	// ========== 리프레시 토큰 생성 ==========
+    public String createRefreshToken(MemberVo member) {
+        Instant now = Instant.now();
+        Instant expiresAt = now.plusMillis(refreshExpirationMillis);
+
+        return Jwts.builder()
+            .setSubject(String.valueOf(member.getId()))
+            .claim("memberId", member.getId())
+            .claim("type", "refresh")  // 리프레시 토큰임을 표시
+            .setIssuedAt(Date.from(now))
+            .setExpiration(Date.from(expiresAt))
+            .signWith(refreshSecretKey, SignatureAlgorithm.HS256)
+            .compact();
+    }
+
+    // ========== 리프레시 토큰으로 새 액세스 토큰 생성 ==========
+    public String refreshAccessToken(String refreshToken) {
+        try {
+            Long memberId = Jwts.parserBuilder()
+                .setSigningKey(refreshSecretKey)
+                .build()
+                .parseClaimsJws(refreshToken)
+                .getBody()
+                .get("memberId", Long.class);
+
+            if (memberId == null) {
+                throw new RuntimeException("유효하지 않은 리프레시 토큰입니다!");
+            }
+
+            // 새로운 액세스 토큰 생성을 위해 임시 MemberVo 생성
+            MemberVo tempMember = new MemberVo();
+            tempMember.setId(memberId);
+            
+            return createAccessToken(tempMember);
+        } catch (Exception e) {
+            throw new RuntimeException("리프레시 토큰 갱신 실패: " + e.getMessage());
+        }
+    }
+    
 	public Long getMemberId(String token) {
 		Object memberId = Jwts.parserBuilder()
 			.setSigningKey(secretKey)
