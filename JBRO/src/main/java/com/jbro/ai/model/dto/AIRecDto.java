@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 public class AIRecDto {
 
+	private int areaCode;
+	
 	private int contentId;
 	private String title;	// 관광지 이름
 	private String firstImage2;	// 대표 이미지

@@ -6,6 +6,6 @@ import com.jbro.ai.model.dto.AIRecDto;
 
 public interface AIService {
 
-	List<AIRecDto> aiRecommend(int areaCode[]);
+	List<AIRecDto> aiRecommend(List<AIRecDto> request);
 	
 }
