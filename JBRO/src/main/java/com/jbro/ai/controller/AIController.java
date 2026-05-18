@@ -18,13 +18,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AIController {
 	
-//	private final AIService aiService;
-//	
-//	@PostMapping
-//	public ResponseEntity<List<AIRecDto>> aiRecommend(@RequestBody List<AIRecDto> request) {
-//		List<AIRecDto> response = aiService.aiRecommend(request);
-//		
-//		return ResponseEntity.ok(response);
-//	}
+	private final AIService aiService;
+	
+	@PostMapping
+	public ResponseEntity<List<AIRecDto>> aiRecommend(@RequestBody List<AIRecDto> request) {
+		List<AIRecDto> response = aiService.aiRecommend(request);
+		
+		return ResponseEntity.ok(response);
+	}
 	
 }
