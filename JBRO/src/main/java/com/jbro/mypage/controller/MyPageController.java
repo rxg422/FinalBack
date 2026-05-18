@@ -1,27 +1,33 @@
 package com.jbro.mypage.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.jbro.auth.model.service.JwtTokenProvider;
 import com.jbro.mypage.model.service.MyPageService;
 import com.jbro.mypage.model.vo.MemberVo;
 
 @RestController
-@RequestMapping("/api/members")
+@RequestMapping({"/api/members", "/api/users"})
 public class MyPageController {
 
 	private final MyPageService myPageService;
+	private final JwtTokenProvider jwtTokenProvider;
 
-	public MyPageController(MyPageService myPageService) {
+	public MyPageController(MyPageService myPageService, JwtTokenProvider jwtTokenProvider) {
 		this.myPageService = myPageService;
+		this.jwtTokenProvider = jwtTokenProvider;
 	}
 
 	@GetMapping
@@ -48,6 +54,34 @@ public class MyPageController {
 	@DeleteMapping("/{memberId}")
 	public int removeMember(@PathVariable Long memberId) {
 		return myPageService.removeMember(memberId);
+	}
+
+	// ========== 닉네임 중복 체크 ==========
+	@GetMapping("/check-nickname")
+	public Map<String, Object> checkNickname(@RequestParam String nickname) {
+		boolean available = myPageService.isNicknameAvailable(nickname);
+		return Map.of(
+			"duplicate", !available,
+			"message", available ? "사용 가능한 닉네임입니다." : "이미 사용 중인 닉네임입니다."
+		);
+	}
+
+	// ========== 닉네임 업데이트 ==========
+	@PatchMapping("/nickname")
+	public Map<String, Object> updateNickname(@RequestBody Map<String, String> request) {
+		String nickname = request.get("nickname");
+		if (nickname == null || nickname.trim().isEmpty()) {
+			return Map.of("success", false, "message", "닉네임을 입력해주세요.");
+		}
+
+		MemberVo updatedMember = myPageService.modifyMyPageNickname(nickname);
+		String newAccessToken = jwtTokenProvider.createAccessToken(updatedMember);
+
+		return Map.of(
+			"success", true,
+			"message", "닉네임이 저장되었습니다.",
+			"token", newAccessToken
+		);
 	}
 }
 

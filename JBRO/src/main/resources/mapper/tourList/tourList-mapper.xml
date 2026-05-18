@@ -30,11 +30,11 @@
                 AND T.CATEGORY_ID = #{categoryId}
             </if>
             <if test="region != null and region != '' and region != '전체 지역'">
-                AND DBMS_LOB.INSTR(L.L_DONG_SIGNGU_NM, #{region}) > 0
+                AND INSTR(L.L_DONG_SIGNGU_NM, #{region}) > 0
             </if>
             <if test="keyword != null and keyword != ''">
-                AND (DBMS_LOB.INSTR(T.TITLE, #{keyword}) > 0
-                  OR DBMS_LOB.INSTR(T.ADDR1, #{keyword}) > 0)
+                AND (INSTR(T.TITLE, #{keyword}) > 0
+                  OR INSTR(T.ADDR1, #{keyword}) > 0)
             </if>
         </where>
     </sql>
@@ -52,55 +52,48 @@
 
     <select id="selectTourList" parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
             resultMap="TourListResultMap">
-        SELECT *
-        FROM (
-            SELECT ROWNUM AS RN, INNER_Q.*
-            FROM (
-                SELECT
-                    T.CONTENT_ID,
-                    T.CONTENT_TYPE_ID,
-                    T.CATEGORY_ID,
-                    C.NAME                                      AS CATEGORY_NAME,
-                    TO_CHAR(T.TITLE)                            AS TITLE,
-                    TO_CHAR(T.FIRST_IMAGE)                      AS FIRST_IMAGE,
-                    TO_CHAR(T.FIRST_IMAGE2)                     AS FIRST_IMAGE2,
-                    TO_CHAR(T.ADDR1)                            AS ADDR1,
-                    TO_CHAR(T.ADDR2)                            AS ADDR2,
-                    T.MAP_X,
-                    T.MAP_Y,
-                    T.L_DONG_SIGNGU_CD,
-                    TO_CHAR(L.L_DONG_SIGNGU_NM)                 AS L_DONG_SIGNGU_NM,
-                    T.VIEW_COUNT,
-                    COUNT(F.FAVORITE_ID)                        AS FAV_COUNT,
-                    COUNT(F.FAVORITE_ID)                        AS FAVORITE_COUNT,
-                    MAX(CASE WHEN F2.USER_ID = #{userId} THEN 'Y' ELSE 'N' END) AS LIKED_YN,
-                    COUNT(R.REVIEW_ID)                          AS REVIEW_COUNT
-                FROM TOUR_PLACE T
-                LEFT JOIN CATEGORY C  ON T.CATEGORY_ID      = C.ID
-                LEFT JOIN LDONG    L  ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
-                LEFT JOIN FAVORITE F  ON T.CONTENT_ID       = F.CONTENT_ID
-                LEFT JOIN FAVORITE F2 ON T.CONTENT_ID       = F2.CONTENT_ID
-                                     AND F2.USER_ID         = #{userId}
-                LEFT JOIN REVIEW   R  ON T.CONTENT_ID       = R.CONTENT_ID
-                                     AND R.REVIEW_ACTIVE    = 'Y'
-                <include refid="searchCondition"/>
-                GROUP BY
-                    T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID,
-                    C.NAME,
-                    TO_CHAR(T.TITLE),
-                    TO_CHAR(T.FIRST_IMAGE),
-                    TO_CHAR(T.FIRST_IMAGE2),
-                    TO_CHAR(T.ADDR1),
-                    TO_CHAR(T.ADDR2),
-                    T.MAP_X, T.MAP_Y,
-                    T.L_DONG_SIGNGU_CD,
-                    TO_CHAR(L.L_DONG_SIGNGU_NM),
-                    T.VIEW_COUNT
-                <include refid="orderCondition"/>
-            ) INNER_Q
-            WHERE ROWNUM &lt;= #{offset} + #{limit}
-        )
-        WHERE RN > #{offset}
+        SELECT
+            T.CONTENT_ID,
+            T.CONTENT_TYPE_ID,
+            T.CATEGORY_ID,
+            C.NAME                              AS CATEGORY_NAME,
+            T.TITLE                             AS TITLE,
+            T.FIRST_IMAGE                       AS FIRST_IMAGE,
+            T.FIRST_IMAGE2                      AS FIRST_IMAGE2,
+            T.ADDR1                             AS ADDR1,
+            T.ADDR2                             AS ADDR2,
+            T.MAP_X,
+            T.MAP_Y,
+            T.L_DONG_SIGNGU_CD,
+            L.L_DONG_SIGNGU_NM                  AS L_DONG_SIGNGU_NM,
+            T.VIEW_COUNT,
+            COUNT(F.FAVORITE_ID)                AS FAV_COUNT,
+            COUNT(F.FAVORITE_ID)                AS FAVORITE_COUNT,
+            MAX(CASE WHEN F2.USER_ID = #{userId} THEN 'Y' ELSE 'N' END) AS LIKED_YN,
+            COUNT(R.REVIEW_ID)                  AS REVIEW_COUNT
+        FROM TOUR_PLACE T
+        LEFT JOIN CATEGORY C  ON T.CATEGORY_ID      = C.ID
+        LEFT JOIN LDONG    L  ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        LEFT JOIN FAVORITE F  ON T.CONTENT_ID       = F.CONTENT_ID
+        LEFT JOIN FAVORITE F2 ON T.CONTENT_ID       = F2.CONTENT_ID
+                             AND F2.USER_ID         = #{userId}
+        LEFT JOIN REVIEW   R  ON T.CONTENT_ID       = R.CONTENT_ID
+                             AND R.REVIEW_ACTIVE    = 'Y'
+        <include refid="searchCondition"/>
+        GROUP BY
+            T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID,
+            C.NAME,
+            T.TITLE,
+            T.FIRST_IMAGE,
+            T.FIRST_IMAGE2,
+            T.ADDR1,
+            T.ADDR2,
+            T.MAP_X, T.MAP_Y,
+            T.L_DONG_SIGNGU_CD,
+            L.L_DONG_SIGNGU_NM,
+            T.VIEW_COUNT
+        <include refid="orderCondition"/>
+        LIMIT #{offset}, #{limit}
     </select>
 
     <select id="selectTourListCount" parameterType="com.jbro.tourList.model.dto.TourListSearchDto"
@@ -117,15 +110,15 @@
             T.CONTENT_TYPE_ID,
             T.CATEGORY_ID,
             C.NAME                              AS CATEGORY_NAME,
-            TO_CHAR(T.TITLE)                    AS TITLE,
-            TO_CHAR(T.FIRST_IMAGE)              AS FIRST_IMAGE,
-            TO_CHAR(T.FIRST_IMAGE2)             AS FIRST_IMAGE2,
-            TO_CHAR(T.ADDR1)                    AS ADDR1,
-            TO_CHAR(T.ADDR2)                    AS ADDR2,
+            T.TITLE                             AS TITLE,
+            T.FIRST_IMAGE                       AS FIRST_IMAGE,
+            T.FIRST_IMAGE2                      AS FIRST_IMAGE2,
+            T.ADDR1                             AS ADDR1,
+            T.ADDR2                             AS ADDR2,
             T.MAP_X,
             T.MAP_Y,
             T.L_DONG_SIGNGU_CD,
-            TO_CHAR(L.L_DONG_SIGNGU_NM)         AS L_DONG_SIGNGU_NM,
+            L.L_DONG_SIGNGU_NM                  AS L_DONG_SIGNGU_NM,
             T.VIEW_COUNT,
             COUNT(F.FAVORITE_ID)                AS FAVORITE_COUNT,
             COUNT(R.REVIEW_ID)                  AS REVIEW_COUNT
@@ -139,20 +132,20 @@
         GROUP BY
             T.CONTENT_ID, T.CONTENT_TYPE_ID, T.CATEGORY_ID,
             C.NAME,
-            TO_CHAR(T.TITLE),
-            TO_CHAR(T.FIRST_IMAGE),
-            TO_CHAR(T.FIRST_IMAGE2),
-            TO_CHAR(T.ADDR1),
-            TO_CHAR(T.ADDR2),
+            T.TITLE,
+            T.FIRST_IMAGE,
+            T.FIRST_IMAGE2,
+            T.ADDR1,
+            T.ADDR2,
             T.MAP_X, T.MAP_Y,
             T.L_DONG_SIGNGU_CD,
-            TO_CHAR(L.L_DONG_SIGNGU_NM),
+            L.L_DONG_SIGNGU_NM,
             T.VIEW_COUNT
     </select>
 
     <update id="updateViewCount" parameterType="long">
         UPDATE TOUR_PLACE
-        SET VIEW_COUNT = NVL(VIEW_COUNT, 0) + 1
+        SET VIEW_COUNT = IFNULL(VIEW_COUNT, 0) + 1
         WHERE CONTENT_ID = #{contentId}
     </update>
 
@@ -164,8 +157,8 @@
     </select>
 
     <insert id="insertFavorite" parameterType="map">
-        INSERT INTO FAVORITE (FAVORITE_ID, USER_ID, CONTENT_ID, CREATED_AT)
-        VALUES (FAVORITE_SEQ.NEXTVAL, #{userId}, #{contentId}, SYSDATE)
+        INSERT INTO FAVORITE (USER_ID, CONTENT_ID, CREATED_AT)
+        VALUES (#{userId}, #{contentId}, NOW())
     </insert>
 
     <delete id="deleteFavorite" parameterType="map">

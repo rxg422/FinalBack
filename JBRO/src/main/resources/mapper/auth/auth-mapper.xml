@@ -6,7 +6,7 @@
 <mapper namespace="com.jbro.auth.model.dao.AuthDAO">
 
   <resultMap id="memberResultMap" type="com.jbro.mypage.model.vo.MemberVo">
-    <id property="id" column="id"/>
+    <id property="id" column="no"/>
     <result property="email" column="email"/>
     <result property="nickname" column="nickname"/>
     <result property="profile" column="profile"/>
@@ -15,48 +15,52 @@
   </resultMap>
 
   <select id="selectMemberBySocialAccount" resultMap="memberResultMap">
-    SELECT m.id, m.email, m.nickname, m.profile, m.created_at, m.status
-    FROM social_account sa
-    JOIN member m ON m.id = sa.user_id
-    WHERE sa.provider = #{provider}
-      AND sa.provider_id = #{providerId}
-      AND m.status = 'Y'
+    SELECT U.NO, U.EMAIL, U.NICKNAME, U.PROFILE, U.CREATED_AT, U.STATUS
+    FROM SOCIAL_ACCOUNT SA
+    JOIN USERS U ON U.NO = SA.USER_ID
+    WHERE SA.PROVIDER = #{provider}
+      AND SA.PROVIDER_ID = #{providerId}
+      AND U.STATUS = 'Y'
   </select>
 
   <select id="selectActiveMemberByEmail" resultMap="memberResultMap">
-    SELECT id, email, nickname, profile, created_at, status
-    FROM member
-    WHERE email = #{email}
-      AND status = 'Y'
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    FROM USERS
+    WHERE EMAIL = #{email}
+      AND STATUS = 'Y'
   </select>
 
   <insert id="insertMember" parameterType="com.jbro.mypage.model.vo.MemberVo" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO member (
-      email,
-      nickname,
-      profile,
-      status
+    INSERT INTO USERS (
+      EMAIL,
+      NICKNAME,
+      PROFILE,
+      STATUS,
+      CREATED_AT
     ) VALUES (
       #{email},
       #{nickname},
       #{profile},
-      COALESCE(#{status}, 'Y')
+      #{status},
+      #{createdAt}
     )
   </insert>
 
   <insert id="insertSocialAccount">
-    INSERT INTO social_account (
-      user_id,
-      provider,
-      provider_id,
-      email,
-      profile
+    INSERT INTO SOCIAL_ACCOUNT (
+      USER_ID,
+      PROVIDER,
+      PROVIDER_ID,
+      EMAIL,
+      PROFILE,
+      CREATED_AT
     ) VALUES (
       #{userId},
       #{provider},
       #{providerId},
       #{email},
-      #{profile}
+      #{profile},
+      NOW()
     )
   </insert>
 </mapper>

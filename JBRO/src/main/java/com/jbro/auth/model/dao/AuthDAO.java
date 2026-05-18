@@ -11,6 +11,9 @@ public interface AuthDAO {
 	MemberVo selectMemberBySocialAccount(@Param("provider") String provider, @Param("providerId") String providerId);
 
 	MemberVo selectActiveMemberByEmail(@Param("email") String email);
+	
+	 // ========== ID로 사용자 정보 조회 ==========
+    MemberVo selectMemberById(@Param("id") Long id);
 
 	int insertMember(MemberVo member);
 

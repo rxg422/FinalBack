@@ -6,89 +6,91 @@
 <mapper namespace="com.jbro.mypage.model.dao.MyPageDAO">
 
   <resultMap id="memberResultMap" type="com.jbro.mypage.model.vo.MemberVo">
-    <id property="id" column="id"/>
-    <result property="email" column="email"/>
-    <result property="nickname" column="nickname"/>
-    <result property="profile" column="profile"/>
-    <result property="createdAt" column="created_at"/>
-    <result property="status" column="status"/>
+    <id property="id" column="NO"/>
+    <result property="email" column="EMAIL"/>
+    <result property="nickname" column="NICKNAME"/>
+    <result property="profile" column="PROFILE"/>
+    <result property="createdAt" column="CREATED_AT"/>
+    <result property="status" column="STATUS"/>
   </resultMap>
 
   <select id="selectMemberList" resultMap="memberResultMap">
-    SELECT id, email, nickname, profile, created_at, status
-    FROM member
-    ORDER BY id DESC
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    FROM USERS
+    ORDER BY NO DESC
   </select>
 
   <select id="selectMember" parameterType="long" resultMap="memberResultMap">
-    SELECT id, email, nickname, profile, created_at, status
-    FROM member
-    WHERE id = #{memberId}
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    FROM USERS
+    WHERE NO = #{memberId}
   </select>
 
   <insert id="insertMember" parameterType="com.jbro.mypage.model.vo.MemberVo" useGeneratedKeys="true" keyProperty="id">
-    INSERT INTO member (
-      email,
-      nickname,
-      profile,
-      status
+    INSERT INTO USERS (
+      EMAIL,
+      NICKNAME,
+      PROFILE,
+      STATUS,
+      CREATED_AT
     ) VALUES (
       #{email},
       #{nickname},
       #{profile},
-      COALESCE(#{status}, 'Y')
+      COALESCE(#{status}, 'Y'),
+      #{createdAt}
     )
   </insert>
 
   <update id="updateMember" parameterType="com.jbro.mypage.model.vo.MemberVo">
-    UPDATE member
-    SET email = #{email},
-        nickname = #{nickname},
-        profile = #{profile},
-        status = #{status}
-    WHERE id = #{id}
+    UPDATE USERS
+    SET EMAIL = #{email},
+        NICKNAME = #{nickname},
+        PROFILE = #{profile},
+        STATUS = #{status}
+    WHERE NO = #{id}
   </update>
 
   <update id="deleteMember" parameterType="long">
-    UPDATE member
-    SET status = 'N'
-    WHERE id = #{memberId}
-      AND status = 'Y'
+    UPDATE USERS
+    SET STATUS = 'N'
+    WHERE NO = #{memberId}
+      AND STATUS = 'Y'
   </update>
 
   <select id="selectMyPageProfile" parameterType="long" resultMap="memberResultMap">
-    SELECT id, email, nickname, profile, created_at, status
-    FROM member
-    WHERE id = #{memberId}
-      AND status = 'Y'
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    FROM USERS
+    WHERE NO = #{memberId}
+      AND STATUS = 'Y'
   </select>
 
   <select id="countByNicknameExceptId" resultType="int">
     SELECT COUNT(*)
-    FROM member
-    WHERE nickname = #{nickname}
-      AND id != #{memberId}
-      AND status = 'Y'
+    FROM USERS
+    WHERE NICKNAME = #{nickname}
+      AND NO != #{memberId}
+      AND STATUS = 'Y'
   </select>
 
   <update id="updateProfileNickname">
-    UPDATE member
-    SET nickname = #{nickname}
-    WHERE id = #{memberId}
-      AND status = 'Y'
+    UPDATE USERS
+    SET NICKNAME = #{nickname}
+    WHERE NO = #{memberId}
+      AND STATUS = 'Y'
   </update>
 
   <update id="updateProfileImage">
-    UPDATE member
-    SET profile = #{profile}
-    WHERE id = #{memberId}
-      AND status = 'Y'
+    UPDATE USERS
+    SET PROFILE = #{profile}
+    WHERE NO = #{memberId}
+      AND STATUS = 'Y'
   </update>
 
   <update id="updateMemberStatus">
-    UPDATE member
-    SET status = #{status}
-    WHERE id = #{memberId}
-      AND status = 'Y'
+    UPDATE USERS
+    SET STATUS = #{status}
+    WHERE NO = #{memberId}
+      AND STATUS = 'Y'
   </update>
 </mapper>
