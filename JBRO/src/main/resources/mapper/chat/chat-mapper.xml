@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="chatMapper">
+
+	<insert id="insertChat" parameterType="com.jbro.chat.model.vo.ChatVO">
+	    INSERT INTO CHAT_HISTORY (
+	        USER_ID, 
+	        QUESTION, 
+	        ANSWER, 
+	        REG_DATE
+	    ) VALUES (
+	        #{userId}, 
+	        #{question}, 
+	        #{answer}, 
+	        CURRENT_TIMESTAMP -- NOW() 대신 이거 사용!
+	    )
+	</insert>
+
+    <!-- 채팅 내역 조회 -->
+    <select id="selectAllHistory" resultType="com.jbro.chat.model.vo.ChatVO">
+        SELECT 
+            ID,
+            USER_ID as userId,
+            QUESTION,
+            ANSWER,
+            REG_DATE as regDate
+        FROM CHAT_HISTORY
+        ORDER BY REG_DATE ASC
+    </select>
+
+</mapper>
