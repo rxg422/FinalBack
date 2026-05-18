@@ -20,7 +20,7 @@
 	</insert>
 	
 	<insert id="insertFestivalIntro">
-		INSERT INTO FESTIVAL_INTRO VALUES(#{contentId}, #{ageLimit}, #{bookingPlace}, #{eventHomepage}, #{spendTimeFestival}, #{sponsor1}, #{sponsor1Tel}, #{sponsor2}, #{sponsor2Tel}, #{useTimeFestival}, #{eventStartDate}, #{eventEndDate}, #{playTime})	
+		INSERT INTO FESTIVAL_INTRO VALUES(#{contentId}, #{ageLimit}, #{bookingPlace}, #{eventStartDate}, #{eventEndDate}, #{playTime}, #{eventHomepage}, #{spendTimeFestival}, #{sponsor1}, #{sponsor1Tel}, #{sponsor2}, #{sponsor2Tel}, #{useTimeFestival})	
 	</insert>
 
 	<insert id="insertLeportsIntro">
@@ -40,7 +40,7 @@
 	</insert>
 	
 	<insert id="insertPlaceImg">
-		INSERT INTO PLACE_IMG VALUES(SEQ_PLACE_IMG.NEXTVAL, #{contentId}, #{imgName}, #{originImgUrl}, #{serialNum}, #{smallImageUrl})
+		INSERT INTO PLACE_IMG(CONTENT_ID, IMG_NAME, ORIGIN_IMG_URL, SERIAL_NUM, SMALL_IMAGE_URL) VALUES(#{contentId}, #{imgName}, #{originImgUrl}, #{serialNum}, #{smallImageUrl})
 	</insert>
 	
 	<insert id="insertLDong">

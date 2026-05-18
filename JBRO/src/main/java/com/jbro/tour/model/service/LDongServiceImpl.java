@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -25,7 +26,9 @@ public class LDongServiceImpl implements LDongService {
 	private final TourApiDao tourApiDao;
 	
 	private static final String BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
-	private static final String SERVICE_KEY = "f9627dd46c0c9f97d293b27fdb6767a789bb707a1fb167cc9b556922b080c79d";
+	
+	@Value("${tour.api.service-key}")
+	private String serviceKey;
 	
 	@Override
 	public void fetchAndSaveLDongData() {
@@ -43,7 +46,7 @@ public class LDongServiceImpl implements LDongService {
 				}
 				
 				for (LDongDto lDong : list) {
-//					tourApiDao.insertlDong(lDong);
+					tourApiDao.insertlDong(lDong);
 				}
 				
 				pageNo++;
@@ -66,7 +69,7 @@ public class LDongServiceImpl implements LDongService {
 					.queryParam("pageNo", pageNo)
 					.queryParam("MobileOS", "ETC")
 					.queryParam("MobileApp", "JBRO")
-					.queryParam("serviceKey", SERVICE_KEY)
+					.queryParam("serviceKey", serviceKey)
 					.queryParam("_type", "json")
 					.queryParam("lDongRegnCd", lDongRegnCd)
 					.queryParam("lDongListYn", "Y")
