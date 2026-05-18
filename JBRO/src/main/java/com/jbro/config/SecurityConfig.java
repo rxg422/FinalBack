@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -19,81 +20,121 @@ import com.jbro.auth.handler.OAuth2LoginSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
-	private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-	public SecurityConfig(
-		OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
-		JwtAuthenticationFilter jwtAuthenticationFilter
-	) {
-		this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
-		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-	}
+    public SecurityConfig(
+            OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
+        this.oAuth2LoginSuccessHandler = oAuth2LoginSuccessHandler;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-	    return http
-	        .cors(Customizer.withDefaults())
-	        .authorizeHttpRequests(auth -> auth
-	            .requestMatchers("/", "/login", "/oauth2/**", "/login/oauth2/**").permitAll()
-	            .requestMatchers("/api/health/**").permitAll()
-	            .requestMatchers("/api/members/**").permitAll()
-	            .requestMatchers("/api/users2/**").permitAll()
-	            .requestMatchers("/uploads/**").permitAll()
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-	            // 여행 목록 조회는 비로그인 허용
-	            .requestMatchers(HttpMethod.GET, "/api/tourList").permitAll()
-	            .requestMatchers(HttpMethod.GET, "/api/tourList/**").permitAll()
+        return http
+                // CORS
+                .cors(Customizer.withDefaults())
 
-	            // 찜하기는 로그인 필요
-	            .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
+                // API 서버 설정
+                .csrf(csrf -> csrf.disable())
+                .formLogin(form -> form.disable())
+                .httpBasic(basic -> basic.disable())
 
-	            .requestMatchers("/api/mypage/**").authenticated()
-	            .requestMatchers("/api/tour/**").authenticated()
-	            .anyRequest().authenticated()
-	        )
-	        .csrf(csrf -> csrf.disable())
-	        .formLogin(form -> form.disable())
-	        .oauth2Login(oauth2 -> oauth2
-	            .successHandler(oAuth2LoginSuccessHandler)
-	        )
-	        .exceptionHandling(exception -> exception
-	            .authenticationEntryPoint((request, response, authException) -> {
-	                if (request.getRequestURI().startsWith("/api/")) {
-	                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-	                    response.setContentType("application/json;charset=UTF-8");
-	                    response.getWriter().write("{\"success\":false,\"message\":\"로그인이 필요합니다.\"}");
-	                    return;
-	                }
+                .authorizeHttpRequests(auth -> auth
 
-	                response.sendRedirect("http://localhost:3000");
-	            })
-	        )
-	        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-	        .build();
-	}
+                        // 기본 허용
+                        .requestMatchers("/error", "/favicon.ico").permitAll()
+                        .requestMatchers("/", "/login", "/oauth2/**", "/login/oauth2/**").permitAll()
 
-	@Bean
-	public CorsConfigurationSource corsConfigurationSource() {
-		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of(
-			"http://localhost:3000",
-			"http://localhost:3001",
-			"http://127.0.0.1:3000",
-			"http://127.0.0.1:3001",
-			"http://192.168.10.29:3000",
-			"http://192.168.10.29:3001",
-			"http://192.168.10.28:3000",
-			"http://192.168.10.28:3001"
-		));
-		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-		configuration.setAllowedHeaders(List.of("*"));
-		configuration.setAllowCredentials(true);
+                        // 챗봇 / AI 추천
+                        .requestMatchers("/api/chat/**").permitAll()
+                        .requestMatchers("/api/aiRec/**").permitAll()
 
-		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/api/**", configuration);
-		return source;
-	}
+                        // 공개 API
+                        .requestMatchers("/api/health/**").permitAll()
+                        .requestMatchers("/api/members/**").permitAll()
+                        .requestMatchers("/api/users2/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+
+                        // 여행 목록 조회
+                        .requestMatchers(HttpMethod.GET, "/api/tourList").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tourList/**").permitAll()
+
+                        // 인증 필요
+                        .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
+                        .requestMatchers("/api/mypage/**").authenticated()
+                        .requestMatchers("/api/tour/**").authenticated()
+
+                        // 나머지
+                        .anyRequest().authenticated()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(oAuth2LoginSuccessHandler)
+                )
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+
+                            if (request.getRequestURI().startsWith("/api/")) {
+
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                response.setContentType("application/json;charset=UTF-8");
+
+                                response.getWriter().write(
+                                        "{\"success\":false,\"message\":\"인증이 필요합니다.\"}"
+                                );
+
+                                return;
+                            }
+
+                            response.sendRedirect("http://localhost:3000");
+                        })
+                )
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
+                .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:3001",
+                "http://192.168.10.29:3000",
+                "http://192.168.10.29:3001",
+                "http://192.168.10.28:3000",
+                "http://192.168.10.28:3001"
+        ));
+
+        configuration.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        // 모든 경로에 CORS 적용
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
 }
