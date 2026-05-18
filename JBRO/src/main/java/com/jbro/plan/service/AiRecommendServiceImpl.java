@@ -11,7 +11,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AiRecommendServiceImpl implements AiRecommendService {
 
-    @Value("${xai.api.key}")
+    @Value("${grok.api.key}")
     private String groqKey;
 
     @Value("${tavily.api.key}")
