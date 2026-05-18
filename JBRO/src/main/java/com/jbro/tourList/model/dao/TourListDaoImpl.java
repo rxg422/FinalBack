@@ -5,14 +5,12 @@ import com.jbro.tourList.model.vo.TourList;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Repository
 public class TourListDaoImpl implements TourListDao {
-
     private static final String NS = "com.jbro.tourList.mapper.TourListMapper.";
 
     @Autowired

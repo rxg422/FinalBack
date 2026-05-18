@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AIController {
 	
+
 	private final AIService aiService;
 	
 	@PostMapping
@@ -28,5 +29,6 @@ public class AIController {
 		
 		return ResponseEntity.ok(response);
 	}
+
 	
 }

@@ -6,8 +6,6 @@ import com.jbro.tourList.model.dto.TourListSearchDto;
 import com.jbro.tourList.model.vo.TourList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 
 @Service
@@ -24,14 +22,12 @@ public class TourListServiceImpl implements TourListService {
     }
 
     @Override
-    @Transactional
     public TourList getTourDetail(Long contentId) {
         tourListDao.updateViewCount(contentId);
         return tourListDao.selectTourDetail(contentId);
     }
 
     @Override
-    @Transactional
     public String toggleFavorite(Long contentId, Long userId) {
         int exists = tourListDao.selectFavoriteExists(contentId, userId);
         if (exists > 0) {
