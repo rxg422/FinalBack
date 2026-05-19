@@ -64,9 +64,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/users2/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
-                        // 여행 목록 조회
+                        // 여행 코스 목록 조회
                         .requestMatchers(HttpMethod.GET, "/api/tourList").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tourList/**").permitAll()
+                        .requestMatchers("/api/course/**").permitAll()
+                        
 
                         // 찜하기는 로그인 필요
         	            .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()

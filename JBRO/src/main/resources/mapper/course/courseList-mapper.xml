@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="courseListMapper">
+
+    <!-- 코스 목록 조회 (지역명 JOIN) -->
+    <select id="selectCourseList" resultType="com.jbro.courseList.model.vo.CourseListVo">
+        SELECT
+            c.COURSE_ID    AS courseId,
+            c.TITLE        AS title,
+            c.SUBTITLE     AS subtitle,
+            c.DURATION     AS duration,
+            c.THEME        AS theme,
+            c.HERO_IMAGE   AS heroImage,
+            l.L_DONG_SIGNGU_NM AS regionName
+        FROM COURSE c
+        LEFT JOIN LDONG l ON c.REGION = l.L_DONG_SIGNGU_CD
+        WHERE c.ACTIVE_YN = 'Y'
+        ORDER BY c.COURSE_ID ASC
+    </select>
+
+    <!-- 코스별 장소 타이틀 최대 5개 (DAY 1부터 순서대로) -->
+    <select id="selectPlaceTitles" parameterType="Long" resultType="String">
+        SELECT tp.TITLE
+        FROM COURSE_DAY cd
+        JOIN COURSE_PLACE cp ON cd.COURSE_DAY_ID = cp.COURSE_DAY_ID
+        JOIN TOUR_PLACE tp   ON cp.PLACE_ID = tp.CONTENT_ID
+        WHERE cd.COURSE_ID = #{courseId}
+        ORDER BY cd.DAY_NO ASC, cp.PLACE_ORDER ASC
+        LIMIT 5
+    </select>
+
+</mapper>
