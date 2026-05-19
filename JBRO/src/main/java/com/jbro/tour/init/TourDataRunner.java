@@ -34,6 +34,8 @@ public class TourDataRunner implements ApplicationRunner {
 //        	int areas[] = {111, 113};
 //        	List<AIRecDto> list = aiService.aiRecommend(areas);
 //        	System.out.println(list);
+        	
+        	
         }
         catch (Exception e) {
             System.out.println("❌ 데이터 수집 실패");

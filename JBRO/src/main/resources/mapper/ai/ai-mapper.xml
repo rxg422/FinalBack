@@ -14,4 +14,30 @@
 		LIMIT 30;
 	</select>
 	
+	<select id="selectSignguList" resultType="int">
+		SELECT L_DONG_SIGNGU_CD
+		FROM LDONG
+		WHERE
+		<foreach collection="list" item="regions" open="(" separator="OR" close=")">
+			L_DONG_SIGNGU_NM LIKE CONCAT('%', #{regions}, '%')
+		</foreach>
+		AND L_DONG_SIGNGU_CD != 110
+	</select>
+	
+	<select id="selectPlanPlaceList" resultType="com.jbro.ai.model.dto.AIDto$AIPlanPlace">
+		SELECT CONTENT_ID, TITLE, ADDR1
+		FROM TOUR_PLACE
+		WHERE category_id = #{categoryId}
+		AND L_DONG_SIGNGU_CD IN
+		<foreach collection="regions" item="region" open="(" separator="," close=")">
+			#{region}
+		</foreach>
+		ORDER BY VIEW_COUNT
+		LIMIT 30
+	</select>
+	
+	<select id="selectPlaceById" resultType="com.jbro.ai.model.dto.AIDto$AIPlanResp$PlanDays$PlanPlace">
+		SELECT FIRST_IMAGE2, ADDR1, ADDR2, MAP_X, MAP_Y FROM TOUR_PLACE WHERE CONTENT_ID = #{contentId}
+	</select>
+	
 </mapper>
