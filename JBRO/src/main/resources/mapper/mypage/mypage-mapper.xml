@@ -66,12 +66,11 @@
   </select>
 
   <select id="countByNicknameExceptId" resultType="int">
-    SELECT COUNT(*)
-    FROM USERS
-    WHERE NICKNAME = #{nickname}
-      AND NO != #{memberId}
-      AND STATUS = 'Y'
-  </select>
+	  SELECT COUNT(*)
+	  FROM USERS
+	  WHERE NICKNAME = #{nickname}
+	    AND NO != #{memberId}
+	</select>
 
   <update id="updateProfileNickname">
     UPDATE USERS

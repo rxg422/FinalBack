@@ -14,15 +14,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.jbro.auth.model.dao.AuthDAO;
 import com.jbro.auth.model.service.JwtTokenProvider;
+import com.jbro.mypage.model.vo.MemberVo;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider jwtTokenProvider;
+	private final AuthDAO authDAO;
 
-	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+	public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, AuthDAO authDAO) {
 		this.jwtTokenProvider = jwtTokenProvider;
+		this.authDAO = authDAO;
 	}
 
 	@Override
@@ -36,7 +40,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if (token != null) {
 			try {
 				Long memberId = jwtTokenProvider.getMemberId(token);
-				System.out.println("🔐 JWT 파싱 성공 - memberId: " + memberId);
+				MemberVo member = authDAO.selectMemberById(memberId);
+
+				if (member == null) {
+					SecurityContextHolder.clearContext();
+					filterChain.doFilter(request, response);
+					return;
+				}
+
 				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
 					memberId,
 					null,
