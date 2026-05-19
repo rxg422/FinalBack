@@ -8,13 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.jbro.auth.model.service.LoginMemberProvider;
 import com.jbro.mypage.model.dao.MyPageDAO;
 import com.jbro.mypage.model.vo.MemberVo;
 import com.jbro.mypage.model.vo.ProfileUpdateResponse;
@@ -30,16 +32,13 @@ public class MyPageServiceImpl implements MyPageService {
 	);
 
 	private final MyPageDAO myPageDAO;
-	private final LoginMemberProvider loginMemberProvider;
 	private final String serverPort;
 
 	public MyPageServiceImpl(
 		MyPageDAO myPageDAO,
-		LoginMemberProvider loginMemberProvider,
 		@Value("${server.port:8081}") String serverPort
 	) {
 		this.myPageDAO = myPageDAO;
-		this.loginMemberProvider = loginMemberProvider;
 		this.serverPort = serverPort;
 	}
 
@@ -70,26 +69,39 @@ public class MyPageServiceImpl implements MyPageService {
 
 	@Override
 	public MemberVo getMyPageProfile() {
-		Long memberId = loginMemberProvider.getLoginMemberId();
-		return myPageDAO.selectMyPageProfile(memberId);
+		Long memberId = getRequiredLoginMemberId();
+		MemberVo profile = myPageDAO.selectMyPageProfile(memberId);
+
+		if (profile == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "활성 회원 정보를 찾을 수 없습니다.");
+		}
+
+		return profile;
 	}
 
 	@Override
 	public boolean isNicknameAvailable(String nickname) {
-		Long memberId = loginMemberProvider.getLoginMemberId();
+		Long memberId = getRequiredLoginMemberId();
 		return myPageDAO.countByNicknameExceptId(nickname, memberId) == 0;
 	}
 
 	@Override
+	@Transactional
 	public MemberVo modifyMyPageNickname(String nickname) {
-		Long memberId = loginMemberProvider.getLoginMemberId();
-		myPageDAO.updateProfileNickname(memberId, nickname);
-		return myPageDAO.selectMyPageProfile(memberId);
+		Long memberId = getRequiredLoginMemberId();
+		int updateCount = myPageDAO.updateProfileNickname(memberId, nickname);
+
+		if (updateCount == 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "닉네임을 수정할 활성 회원 정보를 찾을 수 없습니다.");
+		}
+
+		return getMyPageProfile();
 	}
 
 	@Override
-	public ProfileUpdateResponse updateProfileImage(MultipartFile profileImage, HttpSession session) {
-		Long memberId = loginMemberProvider.getLoginMemberId(session);
+	@Transactional
+	public ProfileUpdateResponse updateProfileImage(MultipartFile profileImage) {
+		Long memberId = getRequiredLoginMemberId();
 
 		if (profileImage == null || profileImage.isEmpty()) {
 			return new ProfileUpdateResponse(false, "업로드할 프로필 이미지를 선택해주세요.", null);
@@ -114,15 +126,44 @@ public class MyPageServiceImpl implements MyPageService {
 
 		String profileUrl = "http://localhost:" + serverPort + "/uploads/profile/" + fileName
 			+ "?v=" + System.currentTimeMillis();
-		myPageDAO.updateProfileImage(memberId, profileUrl);
+		int updateCount = myPageDAO.updateProfileImage(memberId, profileUrl);
 
-		MemberVo profile = myPageDAO.selectMyPageProfile(memberId);
+		if (updateCount == 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "프로필 이미지를 수정할 활성 회원 정보를 찾을 수 없습니다.");
+		}
+
+		MemberVo profile = getMyPageProfile();
 		return new ProfileUpdateResponse(true, "프로필 이미지가 수정되었습니다.", profile);
 	}
 
 	@Override
-	public boolean withdrawMember(HttpSession session) {
-		Long memberId = loginMemberProvider.getLoginMemberId(session);
+	@Transactional
+	public boolean withdrawMember() {
+		Long memberId = getRequiredLoginMemberId();
 		return myPageDAO.updateMemberStatus(memberId, "N") > 0;
+	}
+
+	private Long getRequiredLoginMemberId() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		if (authentication == null || !authentication.isAuthenticated()) {
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+		}
+
+		Object principal = authentication.getPrincipal();
+
+		if (principal instanceof Long memberId) {
+			return memberId;
+		}
+
+		if (principal instanceof Integer memberId) {
+			return memberId.longValue();
+		}
+
+		if (principal instanceof String memberId && memberId.matches("\\d+")) {
+			return Long.parseLong(memberId);
+		}
+
+		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인 회원 정보를 확인할 수 없습니다.");
 	}
 }
