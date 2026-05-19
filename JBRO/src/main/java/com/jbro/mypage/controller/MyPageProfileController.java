@@ -2,8 +2,6 @@ package com.jbro.mypage.controller;
 
 import java.util.Map;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -73,10 +71,9 @@ public class MyPageProfileController {
 
 	@PostMapping("/image")
 	public ResponseEntity<ProfileUpdateResponse> uploadProfileImage(
-		@RequestParam("profileImage") MultipartFile profileImage,
-		HttpSession session
+		@RequestParam("profileImage") MultipartFile profileImage
 	) {
-		ProfileUpdateResponse response = myPageService.updateProfileImage(profileImage, session);
+		ProfileUpdateResponse response = myPageService.updateProfileImage(profileImage);
 		return ResponseEntity.ok(response);
 	}
 }

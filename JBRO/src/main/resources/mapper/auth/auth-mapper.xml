@@ -30,6 +30,13 @@
       AND STATUS = 'Y'
   </select>
 
+  <select id="selectMemberById" resultMap="memberResultMap">
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    FROM USERS
+    WHERE NO = #{id}
+      AND STATUS = 'Y'
+  </select>
+
   <insert id="insertMember" parameterType="com.jbro.mypage.model.vo.MemberVo" useGeneratedKeys="true" keyProperty="id">
     INSERT INTO USERS (
       EMAIL,

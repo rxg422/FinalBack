@@ -64,8 +64,8 @@ public class MyPageController {
 		if (nickname.length() < 2 || nickname.length() > 12) {
 			return "닉네임은 2~12자리로 입력해주세요.";
 		}
-		if (!nickname.matches("^[가-힣a-zA-Z]{2,12}$")) {
-			return "닉네임은 한글과 영어만 사용 가능합니다.";
+		if (!nickname.matches("^[가-힣a-zA-Z0-9]{2,12}$")) {
+			return "닉네임은 한글,영문,숫자만 사용 가능합니다.";
 		}
 		return null;
 	}
