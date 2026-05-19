@@ -3,6 +3,7 @@ package com.jbro.tourDetail.controller;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +32,11 @@ public class TravelDetailController {
     public ResponseEntity<?> getDetail(
             @PathVariable long contentId,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId"); // JWT 필터에서 세팅
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}// JWT 필터에서 세팅
         Map<String, Object> result = travelDetailService.getDetail(contentId, userId);
         return ResponseEntity.ok(result);
     }
@@ -53,7 +58,14 @@ public class TravelDetailController {
             @RequestParam("content") String content,
             @RequestParam(value = "image", required = false) MultipartFile image,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId");
+    	System.out.println("파일 들어왔냐? " + (image != null));
+        System.out.println("파일 비었냐? " + (image != null && image.isEmpty()));
+        System.out.println("파일 이름: " + (image != null ? image.getOriginalFilename() : "null"));
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}
         if (userId == null) return ResponseEntity.status(401).build();
         travelDetailService.createReview(contentId, userId, content, image);
         return ResponseEntity.ok().build();
@@ -65,7 +77,11 @@ public class TravelDetailController {
             @PathVariable long reviewId,
             @RequestBody Map<String, String> body,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId");
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}
         if (userId == null) return ResponseEntity.status(401).build();
         travelDetailService.updateReview(reviewId, userId, body.get("content"));
         return ResponseEntity.ok().build();
@@ -76,7 +92,11 @@ public class TravelDetailController {
     public ResponseEntity<?> deleteReview(
             @PathVariable long reviewId,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId");
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}
         if (userId == null) return ResponseEntity.status(401).build();
         travelDetailService.deleteReview(reviewId, userId);
         return ResponseEntity.ok().build();
@@ -87,7 +107,11 @@ public class TravelDetailController {
     public ResponseEntity<?> toggleFavorite(
             @PathVariable long contentId,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId");
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}
         if (userId == null) return ResponseEntity.status(401).build();
         travelDetailService.toggleFavorite(contentId, userId);
         return ResponseEntity.ok().build();
@@ -99,7 +123,11 @@ public class TravelDetailController {
             @PathVariable long reviewId,
             @RequestBody Map<String, String> body,
             HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("memberId");
+    	Long userId = null;
+    	var auth = SecurityContextHolder.getContext().getAuthentication();
+    	if (auth != null && auth.getPrincipal() instanceof Long) {
+    	    userId = (Long) auth.getPrincipal();
+    	}
         if (userId == null) return ResponseEntity.status(401).build();
         travelDetailService.reportReview(reviewId, userId, body.get("reportType"), body.get("reason"));
         return ResponseEntity.ok().build();
