@@ -56,9 +56,30 @@ public class MyPageController {
 		return myPageService.removeMember(memberId);
 	}
 
+	// ========== 닉네임 유효성 검사 ==========
+	private String validateNickname(String nickname) {
+		if (nickname == null || nickname.trim().isEmpty()) {
+			return "닉네임을 입력해주세요.";
+		}
+		if (nickname.length() < 2 || nickname.length() > 12) {
+			return "닉네임은 2~12자리로 입력해주세요.";
+		}
+		if (!nickname.matches("^[가-힣a-zA-Z]{2,12}$")) {
+			return "닉네임은 한글과 영어만 사용 가능합니다.";
+		}
+		return null;
+	}
+
 	// ========== 닉네임 중복 체크 ==========
 	@GetMapping("/check-nickname")
 	public Map<String, Object> checkNickname(@RequestParam String nickname) {
+		String validationError = validateNickname(nickname);
+		if (validationError != null) {
+			return Map.of(
+				"duplicate", true,
+				"message", validationError
+			);
+		}
 		boolean available = myPageService.isNicknameAvailable(nickname);
 		return Map.of(
 			"duplicate", !available,
@@ -70,8 +91,13 @@ public class MyPageController {
 	@PatchMapping("/nickname")
 	public Map<String, Object> updateNickname(@RequestBody Map<String, String> request) {
 		String nickname = request.get("nickname");
-		if (nickname == null || nickname.trim().isEmpty()) {
-			return Map.of("success", false, "message", "닉네임을 입력해주세요.");
+		String validationError = validateNickname(nickname);
+		if (validationError != null) {
+			return Map.of("success", false, "message", validationError);
+		}
+
+		if (!myPageService.isNicknameAvailable(nickname)) {
+			return Map.of("success", false, "message", "이미 사용 중인 닉네임입니다.");
 		}
 
 		MemberVo updatedMember = myPageService.modifyMyPageNickname(nickname);
