@@ -2,8 +2,6 @@ package com.jbro.mypage.model.service;
 
 import java.util.List;
 
-import jakarta.servlet.http.HttpSession;
-
 import org.springframework.web.multipart.MultipartFile;
 
 import com.jbro.mypage.model.vo.MemberVo;
@@ -27,7 +25,7 @@ public interface MyPageService {
 
 	MemberVo modifyMyPageNickname(String nickname);
 
-	ProfileUpdateResponse updateProfileImage(MultipartFile profileImage, HttpSession session);
+	ProfileUpdateResponse updateProfileImage(MultipartFile profileImage);
 
-	boolean withdrawMember(HttpSession session);
+	boolean withdrawMember();
 }
