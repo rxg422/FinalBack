@@ -20,8 +20,8 @@ public class TravelDetailServiceImpl implements TravelDetailService {
     private final TravelDetailDao travelDetailDao;
 
     // 이미지 저장 경로 (환경에 맞게 수정)
-    private static final String UPLOAD_DIR = "/uploads/reviews/";
-
+    private static final String UPLOAD_DIR =
+            System.getProperty("user.dir") + "/uploads/reviews/";
     @Override
     public Map<String, Object> getDetail(long contentId, Long userId) {
         PlaceDto place = travelDetailDao.selectPlace(contentId);
@@ -156,6 +156,7 @@ public class TravelDetailServiceImpl implements TravelDetailService {
             file.transferTo(dest);
             return "/uploads/reviews/" + fileName;
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException("이미지 저장 실패", e);
         }
     }
