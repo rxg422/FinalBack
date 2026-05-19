@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.jbro.courseDetail.model.dao.CourseDetailDao">
+
+    <select id="getCourseDetail" parameterType="long" resultType="com.jbro.courseDetail.model.vo.CourseDetailVo">
+        SELECT
+            C.COURSE_ID         AS courseId,
+            C.REGION            AS regionCode,
+            L.L_DONG_SIGNGU_NM  AS region,
+            C.TITLE             AS title,
+            C.SUBTITLE          AS subtitle,
+            C.DURATION          AS duration,
+            C.THEME             AS theme,
+            C.TOTAL_DISTANCE    AS totalDistance,
+            C.HISTORY_YEAR      AS historyYear,
+            C.HISTORY_SUMMARY   AS historySummary,
+            C.INTRO_TITLE       AS introTitle,
+            C.INTRO_TEXT        AS introText,
+            C.IS_MULTI_DAY      AS isMultiDay,
+            C.HERO_IMAGE        AS heroImage,
+            CD.DAY_NO           AS dayNo,
+            CD.DAY_TITLE        AS dayTitle,
+            CP.PLACE_ORDER      AS placeOrder,
+            CP.PLACE_DESC       AS placeDesc,
+            TP.CONTENT_ID       AS contentId,
+            TP.TITLE            AS placeName,
+            TP.ADDR1            AS addr1,
+            TP.TEL              AS tel,
+            TP.MAP_X            AS mapX,
+            TP.MAP_Y            AS mapY,
+            TP.FIRST_IMAGE      AS firstImage
+        FROM COURSE C
+        JOIN LDONG L        ON C.REGION = L.L_DONG_SIGNGU_CD
+        JOIN COURSE_DAY CD  ON C.COURSE_ID = CD.COURSE_ID
+        JOIN COURSE_PLACE CP ON CD.COURSE_DAY_ID = CP.COURSE_DAY_ID
+        JOIN TOUR_PLACE TP  ON CP.PLACE_ID = TP.CONTENT_ID
+        WHERE C.COURSE_ID = #{courseId}
+          AND C.ACTIVE_YN = 'Y'
+        ORDER BY CD.DAY_NO, CP.PLACE_ORDER
+    </select>
+
+    <select id="getCourseTips" parameterType="long" resultType="com.jbro.courseDetail.model.vo.CourseDetailTipVo">
+        SELECT
+            COURSE_ID   AS courseId,
+            TIP_CONTENT AS tipContent,
+            TIP_ORDER   AS tipOrder
+        FROM COURSE_TIP
+        WHERE COURSE_ID = #{courseId}
+        ORDER BY TIP_ORDER
+    </select>
+
+    <select id="getPopularPlaces" parameterType="int" resultType="com.jbro.courseDetail.model.vo.CoursePopularPlaceVo">
+    SELECT *
+    FROM (
+        SELECT
+            TP.CONTENT_ID        AS contentId,
+            TP.TITLE             AS title,
+            TP.FIRST_IMAGE       AS firstImage,
+            C.NAME               AS categoryName,
+            COUNT(F.FAVORITE_ID) AS favoriteCount,
+            TP.VIEW_COUNT        AS viewCount,
+            ROW_NUMBER() OVER (
+                PARTITION BY C.ID
+                ORDER BY COUNT(F.FAVORITE_ID) DESC, TP.VIEW_COUNT DESC
+            ) AS rn
+        FROM TOUR_PLACE TP
+        JOIN CATEGORY C ON TP.CATEGORY_ID = C.ID
+        LEFT JOIN FAVORITE F ON TP.CONTENT_ID = F.CONTENT_ID
+        JOIN LDONG L ON TP.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+        WHERE L.L_DONG_SIGNGU_NM LIKE CONCAT((
+            SELECT L2.L_DONG_SIGNGU_NM
+            FROM LDONG L2
+            WHERE L2.L_DONG_SIGNGU_CD = #{regionCode}
+        ), '%')
+        AND TP.FIRST_IMAGE IS NOT NULL
+        AND TP.FIRST_IMAGE != ''
+        GROUP BY TP.CONTENT_ID, TP.TITLE, TP.FIRST_IMAGE, C.ID, C.NAME, TP.VIEW_COUNT
+    ) ranked
+    WHERE rn = 1
+    ORDER BY categoryName
+</select>
+
+</mapper>
