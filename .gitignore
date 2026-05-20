@@ -389,3 +389,6 @@ $RECYCLE.BIN/
 JBRO/src/main/resources/application-local.properties
 JBRO/uploads/
 .claude/settings.local.json
+JBRO/.claude/settings.local.json
+.classpath
+.settings/
