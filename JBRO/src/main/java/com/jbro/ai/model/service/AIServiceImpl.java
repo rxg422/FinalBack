@@ -75,44 +75,8 @@ public class AIServiceImpl implements AIService {
                   }
                 ]
 				""".formatted(placeInfo);
-		
-		// Grok AI 요청 Body 생성
-        Map<String, Object> requestBody = Map.of(
-                "model", "llama-3.3-70b-versatile",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "당신은 JSON만 반환하는 여행 추천 AI입니다."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", prompt
-                        )
-                ),
-                "temperature", 0.3
-        );
         
-        // xAI API 호출
-        Map response = webClient.post()
-                .uri(grokUrl) // https://api.x.ai/v1/chat/completions
-                .header("Authorization", "Bearer " + grokKey)
-                .header("Content-Type", "application/json")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
-        
-        // 응답에서 content 추출
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-        Map<String, Object> firstChoice = choices.get(0);
-        Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
-        String content = (String) message.get("content");
-
-        // ```json ... ``` 형태로 감싸져 오는 경우 제거
-        content = content.replaceAll("^```json\\s*", "")
-                         .replaceAll("^```\\s*", "")
-                         .replaceAll("\\s*```$", "")
-                         .trim();
+        String content = callGroq(prompt);
         		
 		try {
             // JSON 문자열 → List<AIRecDto>
@@ -120,7 +84,8 @@ public class AIServiceImpl implements AIService {
                     content,
                     new TypeReference<List<AIRecDto>>() {}
             );
-        } catch (Exception e) {
+        }
+		catch (Exception e) {
             throw new RuntimeException("AI 응답 파싱 실패: " + content, e);
         }
 	}
@@ -154,8 +119,14 @@ public class AIServiceImpl implements AIService {
 			
 			[Schedule Generation Rules]
 			- Be sure to only select from the list of places provided below.
-			- Consider moving routes.
+			- You should consider the path of travel based on the address.
 			- Do not use the same place repeatedly.
+			
+			[Last day or One day trip pattern]
+			1. 관광지
+			2. 음식점
+			3. 관광지
+			4. 관광지
 			
 			[Day schedule pattern]
 			1. 관광지
@@ -164,12 +135,6 @@ public class AIServiceImpl implements AIService {
 			4. 관광지
 			5. 음식점
 			6. 숙소
-			
-			[Last day or One day trip pattern]
-			1. 관광지
-			2. 음식점
-			3. 관광지
-			4. 관광지
 			
 			[response format]
 			{
@@ -207,7 +172,7 @@ public class AIServiceImpl implements AIService {
 					planLodgingList
 			);
 		
-		String content = callXAI(prompt);
+		String content = callGroq(prompt);
 		
 		try {
             // JSON 문자열 → List<AIRecDto>
@@ -231,8 +196,8 @@ public class AIServiceImpl implements AIService {
 		
 	}
 	
-	private String callXAI(String prompt) {
-		// Grok AI 요청 Body 생성
+	private String callGroq(String prompt) {
+		// Groq AI 요청 Body 생성
         Map<String, Object> requestBody = Map.of(
                 "model", "llama-3.3-70b-versatile",
                 "messages", List.of(
@@ -248,7 +213,7 @@ public class AIServiceImpl implements AIService {
                 "temperature", 0.3
         );
         
-        // xAI(Grok) API 호출
+        // (Groq) API 호출
         Map response = webClient.post()
                 .uri(grokUrl) // https://api.x.ai/v1/chat/completions
                 .header("Authorization", "Bearer " + grokKey)
