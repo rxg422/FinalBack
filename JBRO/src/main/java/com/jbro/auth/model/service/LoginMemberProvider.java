@@ -2,28 +2,40 @@ package com.jbro.auth.model.service;
 
 import jakarta.servlet.http.HttpSession;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class LoginMemberProvider {
 
-	private static final Long TEMP_LOGIN_MEMBER_ID = 1L;
 
 	public Long getLoginMemberId() {
-		Long memberId = getMemberIdFromAuthentication();
-		return memberId != null ? memberId : TEMP_LOGIN_MEMBER_ID;
+	    Long memberId = getMemberIdFromAuthentication();
+
+	    if (memberId == null) {
+	        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
+	    }
+
+	    return memberId;
 	}
 
 	public Long getLoginMemberId(HttpSession session) {
-		Long memberId = getMemberIdFromAuthentication();
-		if (memberId != null) {
-			return memberId;
-		}
+	    Long memberId = getMemberIdFromAuthentication();
 
-		memberId = getMemberIdFromSession(session);
-		return memberId != null ? memberId : TEMP_LOGIN_MEMBER_ID;
+	    if (memberId != null) {
+	        return memberId;
+	    }
+
+	    memberId = getMemberIdFromSession(session);
+
+	    if (memberId != null) {
+	        return memberId;
+	    }
+
+	    throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
 	}
 
 	private Long getMemberIdFromAuthentication() {
