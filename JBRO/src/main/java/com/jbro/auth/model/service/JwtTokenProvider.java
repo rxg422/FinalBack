@@ -49,6 +49,7 @@ public class JwtTokenProvider {
 			.claim("nickname", member.getNickname())
 			.claim("profileImg", member.getProfile())
 			.claim("nicknameSet", nicknameSet)
+			.claim("role", member.getRole() != null ? member.getRole() : "USER")
 			.setIssuedAt(Date.from(now))
 			.setExpiration(Date.from(expiresAt))
 			.signWith(secretKey, SignatureAlgorithm.HS256)
@@ -63,6 +64,7 @@ public class JwtTokenProvider {
         return Jwts.builder()
             .setSubject(String.valueOf(member.getId()))
             .claim("memberId", member.getId())
+            .claim("role", member.getRole() != null ? member.getRole() : "USER")
             .claim("type", "refresh")  // 리프레시 토큰임을 표시
             .setIssuedAt(Date.from(now))
             .setExpiration(Date.from(expiresAt))
@@ -73,12 +75,14 @@ public class JwtTokenProvider {
     // ========== 리프레시 토큰으로 새 액세스 토큰 생성 ==========
     public String refreshAccessToken(String refreshToken) {
         try {
-            Long memberId = Jwts.parserBuilder()
+            var claims = Jwts.parserBuilder()
                 .setSigningKey(refreshSecretKey)
                 .build()
                 .parseClaimsJws(refreshToken)
-                .getBody()
-                .get("memberId", Long.class);
+                .getBody();
+
+            Long memberId = claims.get("memberId", Long.class);
+            String role = claims.get("role", String.class);
 
             if (memberId == null) {
                 throw new RuntimeException("유효하지 않은 리프레시 토큰입니다!");
@@ -87,7 +91,8 @@ public class JwtTokenProvider {
             // 새로운 액세스 토큰 생성을 위해 임시 MemberVo 생성
             MemberVo tempMember = new MemberVo();
             tempMember.setId(memberId);
-            
+            tempMember.setRole(role != null ? role : "USER");
+
             return createAccessToken(tempMember);
         } catch (Exception e) {
             throw new RuntimeException("리프레시 토큰 갱신 실패: " + e.getMessage());
