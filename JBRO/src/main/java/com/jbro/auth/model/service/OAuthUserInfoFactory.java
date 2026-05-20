@@ -94,10 +94,7 @@ public class OAuthUserInfoFactory {
     }
 
     private OAuthUserInfo createGoogleUserInfo(Map<String, Object> attributes) {
-        System.out.println("📱 Google 속성 정보: " + attributes);
-
         String providerId = toStringOrNull(attributes.get("sub"));
-        System.out.println("🆔 Google providerId (sub): " + providerId);
 
         // ========== providerId 검증 ==========
         if (providerId == null || providerId.isEmpty()) {
@@ -106,16 +103,12 @@ public class OAuthUserInfoFactory {
 
         // ========== 이메일 검증 ==========
         String email = toStringOrNull(attributes.get("email"));
-        System.out.println("📧 Google email: " + email);
-
         if (email == null || email.isEmpty()) {
             throw new IllegalArgumentException("구글에서 제공한 이메일이 없습니다!");
         }
 
         String name = toStringOrNull(attributes.get("name"));
         String picture = toStringOrNull(attributes.get("picture"));
-        System.out.println("👤 Google name: " + name);
-        System.out.println("🖼️ Google picture: " + picture);
 
         return new OAuthUserInfo(
             "google",
