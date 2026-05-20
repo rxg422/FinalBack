@@ -15,5 +15,6 @@ public class MemberVo {
 	private String profile;
 	private LocalDateTime createdAt;
 	private String status;
+	private String role;  // ADMIN, USER, GUEST
 }
 
