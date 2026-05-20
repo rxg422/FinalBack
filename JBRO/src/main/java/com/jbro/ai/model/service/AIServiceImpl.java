@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,19 +13,22 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jbro.ai.model.dao.AIDao;
+import com.jbro.ai.model.dto.AIDto.AIDay;
+import com.jbro.ai.model.dto.AIDto.AIPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp;
-import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
+import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
+import com.jbro.ai.model.dto.AIDto.AIPlanner;
 import com.jbro.ai.model.dto.AIRecDto;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class AIServiceImpl implements AIService {
 	
 	private final WebClient webClient = WebClient.builder().build();
@@ -237,6 +241,46 @@ public class AIServiceImpl implements AIService {
         
         return content;
 	}
+
+	@Override
+	public void insertAIPlan(AIPlanResp plan) {
+		AIPlanner aiPlan = new AIPlanner();
+		
+		aiPlan.setUserId(getCurrentUserId());
+		aiPlan.setTitle(plan.getTitle());
+		aiPlan.setDescription(plan.getDescription());
+		
+		aiDao.insertAIPlan(aiPlan);
+		
+		for (PlanDays dayPlan : plan.getDays()) {
+			AIDay aiDay = new AIDay();
+			
+			aiDay.setPlannerId(aiPlan.getId());
+			aiDay.setDay(dayPlan.getDay());
+			
+			aiDao.insertAIDay(aiDay);
+			
+			for (PlanPlace place : dayPlan.getSchedule()) {
+				AIPlace aiPlace = new AIPlace();
+				
+				aiPlace.setDayId(aiDay.getId());
+				aiPlace.setVisitOrder(place.getOrder());
+				aiPlace.setContentId(place.getContentId());
+				aiPlace.setDescription(place.getReason());
+				
+				aiDao.insertAIPlace(aiPlace);
+			}
+		}
+		
+	}
+	
+	private Long getCurrentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Long) {
+            return (Long) auth.getPrincipal();
+        }
+        return null;
+    }
 	
 
 }
