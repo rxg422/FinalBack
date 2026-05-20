@@ -38,6 +38,11 @@ public class AIController {
 		return ResponseEntity.ok(response);
 	}
 	
-	
+	@PostMapping("insertAIPlan")
+	public ResponseEntity<Void> insertAIPlan(@RequestBody AIPlanResp plan) {
+		aiService.insertAIPlan(plan);
+		
+		return ResponseEntity.ok().build();
+	}
 	
 }

@@ -11,5 +11,7 @@ public interface AIService {
 	List<AIRecDto> aiRecommend(int areaCode[]);
 
 	AIPlanResp aiPlanner(AIPlanUserReq request);
+
+	void insertAIPlan(AIPlanResp plan);
 	
 }
