@@ -92,4 +92,67 @@
     WHERE NO = #{memberId}
       AND STATUS = 'Y'
   </update>
+
+  <select id="selectMyFavorites" parameterType="long" resultType="com.jbro.mypage.model.vo.MyPageFavoriteVo">
+    SELECT
+      F.FAVORITE_ID AS favoriteId,
+      T.CONTENT_ID AS contentId,
+      T.CONTENT_TYPE_ID AS contentTypeId,
+      T.CATEGORY_ID AS categoryId,
+      CASE T.CONTENT_TYPE_ID
+        WHEN 12 THEN '관광지'
+        WHEN 14 THEN '문화시설'
+        WHEN 15 THEN '행사'
+        WHEN 25 THEN '여행코스'
+        WHEN 28 THEN '레포츠'
+        WHEN 32 THEN '숙소'
+        WHEN 38 THEN '쇼핑'
+        WHEN 39 THEN '식당'
+        ELSE COALESCE(C.NAME, '기타')
+      END AS categoryName,
+      T.TITLE AS title,
+      T.FIRST_IMAGE AS firstImage,
+      T.ADDR1 AS addr1,
+      COALESCE(L.L_DONG_SIGNGU_NM, T.ADDR1) AS region,
+      F.CREATED_AT AS createdAt
+    FROM FAVORITE F
+    JOIN TOUR_PLACE T ON F.CONTENT_ID = T.CONTENT_ID
+    LEFT JOIN CATEGORY C ON T.CATEGORY_ID = C.ID
+    LEFT JOIN LDONG L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+    WHERE F.USER_ID = #{memberId}
+    ORDER BY F.CREATED_AT DESC, F.FAVORITE_ID DESC
+  </select>
+
+  <select id="selectMyReviews" parameterType="long" resultType="com.jbro.mypage.model.vo.MyPageReviewVo">
+    SELECT
+      R.REVIEW_ID AS reviewId,
+      R.CONTENT_ID AS contentId,
+      T.TITLE AS title,
+      R.CONTENT AS content,
+      R.REVIEW_IMAGE AS reviewImage,
+      R.CREATED_AT AS createdAt,
+      R.REVIEW_ACTIVE AS reviewActive
+    FROM REVIEW R
+    JOIN TOUR_PLACE T ON R.CONTENT_ID = T.CONTENT_ID
+    WHERE R.USER_ID = #{memberId}
+      AND R.REVIEW_ACTIVE = 'Y'
+    ORDER BY R.CREATED_AT DESC, R.REVIEW_ID DESC
+  </select>
+
+  <select id="selectMyReports" parameterType="long" resultType="com.jbro.mypage.model.vo.MyPageReportVo">
+    SELECT
+      RP.REPORT_ID AS reportId,
+      RV.REVIEW_ID AS reviewId,
+      T.CONTENT_ID AS contentId,
+      T.TITLE AS title,
+      RP.REPORT_TYPE AS reportType,
+      RP.REASON AS reason,
+      RP.STATUS AS reportStatus,
+      RP.CREATED_AT AS createdAt
+    FROM REPORT RP
+    JOIN REVIEW RV ON RP.REVIEW_ID = RV.REVIEW_ID
+    JOIN TOUR_PLACE T ON RV.CONTENT_ID = T.CONTENT_ID
+    WHERE RP.USER_ID = #{memberId}
+    ORDER BY RP.CREATED_AT DESC, RP.REPORT_ID DESC
+  </select>
 </mapper>

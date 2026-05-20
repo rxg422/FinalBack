@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.jbro.mypage.model.vo.MemberVo;
+import com.jbro.mypage.model.vo.MyPageFavoriteVo;
+import com.jbro.mypage.model.vo.MyPageReportVo;
+import com.jbro.mypage.model.vo.MyPageReviewVo;
 
 @Mapper
 public interface MyPageDAO {
@@ -29,4 +32,10 @@ public interface MyPageDAO {
 	int updateProfileImage(@Param("memberId") Long memberId, @Param("profile") String profile);
 
 	int updateMemberStatus(@Param("memberId") Long memberId, @Param("status") String status);
+
+	List<MyPageFavoriteVo> selectMyFavorites(Long memberId);
+
+	List<MyPageReviewVo> selectMyReviews(Long memberId);
+
+	List<MyPageReportVo> selectMyReports(Long memberId);
 }

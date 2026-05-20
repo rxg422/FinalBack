@@ -19,6 +19,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.jbro.mypage.model.dao.MyPageDAO;
 import com.jbro.mypage.model.vo.MemberVo;
+import com.jbro.mypage.model.vo.MyPageFavoriteVo;
+import com.jbro.mypage.model.vo.MyPageReportVo;
+import com.jbro.mypage.model.vo.MyPageReviewVo;
 import com.jbro.mypage.model.vo.ProfileUpdateResponse;
 
 @Service
@@ -141,6 +144,24 @@ public class MyPageServiceImpl implements MyPageService {
 	public boolean withdrawMember() {
 		Long memberId = getRequiredLoginMemberId();
 		return myPageDAO.updateMemberStatus(memberId, "N") > 0;
+	}
+
+	@Override
+	public List<MyPageFavoriteVo> getMyFavorites() {
+		Long memberId = getRequiredLoginMemberId();
+		return myPageDAO.selectMyFavorites(memberId);
+	}
+
+	@Override
+	public List<MyPageReviewVo> getMyReviews() {
+		Long memberId = getRequiredLoginMemberId();
+		return myPageDAO.selectMyReviews(memberId);
+	}
+
+	@Override
+	public List<MyPageReportVo> getMyReports() {
+		Long memberId = getRequiredLoginMemberId();
+		return myPageDAO.selectMyReports(memberId);
 	}
 
 	private Long getRequiredLoginMemberId() {
