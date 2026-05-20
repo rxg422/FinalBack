@@ -81,7 +81,7 @@ public class OAuthUserInfoFactory {
         // ========== 이메일 검증 ==========
         String email = toStringOrNull(response.get("email"));
         if (email == null || email.isEmpty()) {
-            throw new IllegalArgumentException("네이버에서 제공한 이메일이 없습니다!");
+            email = "naver_" + providerId + "@jbro.local";
         }
 
         return new OAuthUserInfo(
