@@ -128,7 +128,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	        accessTokenCookie.setSecure(true);    // HTTPS만 전송
 	        accessTokenCookie.setPath("/");
 	        accessTokenCookie.setMaxAge(30 * 60); // 30분
-	        accessTokenCookie.setSameSite("Lax"); // CSRF 공격 방어
 	        response.addCookie(accessTokenCookie);
 	        logger.info("Access token cookie set");
 
@@ -137,7 +136,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	        refreshTokenCookie.setSecure(true);
 	        refreshTokenCookie.setPath("/");
 	        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
-	        refreshTokenCookie.setSameSite("Lax");
 	        response.addCookie(refreshTokenCookie);
 	        logger.info("Refresh token cookie set");
 
