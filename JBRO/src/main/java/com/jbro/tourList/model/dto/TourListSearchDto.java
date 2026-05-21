@@ -13,6 +13,7 @@ public class TourListSearchDto {
     private int page = 1;
     private int limit = 6;             // TSX: limit=6
     private Long userId;               // 찜 여부 확인용
+    private String status; // "ongoing" | "upcoming" | null
 
     public int getOffset() {
         return (page - 1) * limit;

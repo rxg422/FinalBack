@@ -245,8 +245,8 @@
 
     <!-- 신고 등록 -->
     <insert id="insertReport" parameterType="map">
-        INSERT INTO REPORT (USER_ID, REVIEW_ID, REPORT_TYPE, REASON, CREATED_AT)
-        VALUES (#{userId}, #{reviewId}, #{reportType}, #{reason}, NOW())
-    </insert>
+    INSERT INTO REPORT (USER_ID, REVIEW_ID, REPORT_TYPE, REASON, STATUS, CREATED_AT)
+    VALUES (#{userId}, #{reviewId}, #{reportType}, #{reason}, 'PENDING', NOW())
+</insert>
 
 </mapper>
