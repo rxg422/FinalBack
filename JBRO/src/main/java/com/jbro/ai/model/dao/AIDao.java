@@ -10,11 +10,12 @@ import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanner;
 import com.jbro.ai.model.dto.AIDto.AIRegion;
 import com.jbro.ai.model.dto.AIDto.AIThema;
+import com.jbro.ai.model.dto.AIDto.UserFavorit;
 import com.jbro.ai.model.dto.AIRecDto;
 
 public interface AIDao {
 
-	List<AIRecDto> selectPlaceList(int[] areaCode);
+	List<AIRecDto> selectPlaceList();
 
 	List<Integer> selectSignguLsit(List<String> regions);
 
@@ -31,5 +32,7 @@ public interface AIDao {
 	void insertPlanRegion(AIRegion region);
 
 	void insertPlanThema(AIThema thema);
+
+	List<UserFavorit> selectUserFavoritList(Long userId);
 
 }

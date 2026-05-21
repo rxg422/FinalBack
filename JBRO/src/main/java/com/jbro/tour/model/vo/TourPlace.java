@@ -53,5 +53,31 @@ public class TourPlace {
 	private String sponsor2tel;		// 주관사연락처
 	
 	
-		
+//	/* AreaBasedList */
+//	private int contentId; // 콘텐츠 ID
+//	private int contentTypeId; // 관광타입 ID
+//
+//	private String title; // 제목
+//	
+//	private String firstImage; // 대표 이미지(원본)
+//	private String firstImage2; // 대포 이미지(썸네일)
+//
+//	private int lDongRegnCd; // 법정동 시도 코드
+//	private int lDongSignguCd; // 법정동 시군구 코드
+//
+//	private String addr1; // 주소
+//	private String addr2; // 상세 주소
+//	
+//	private double mapX; // GPS X좌표
+//	private double mapY; // GPS Y좌표
+//
+//	private Date createdTime; // 등록일
+//	private Date modifiedTime; // 수정일
+//
+//	private String tel; // 전화번호
+//
+//	private String lclsSystm1; // 분류체계 대분류
+//	private String lclsSystm2; // 분류체계 중분류
+//	private String lclsSystm3; // 분류체계 소분류
+	
 }

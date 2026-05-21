@@ -8,6 +8,12 @@ import lombok.NoArgsConstructor;
 public class AIDto {
 	
 	@Data
+	public static class UserFavorit {
+		private int ContentId;
+		private String title;
+	}
+	
+	@Data
 	public static class AIPlanUserReq {
 		private String duration;		// 여행 기간
 		private List<String> regions;	// 지역
