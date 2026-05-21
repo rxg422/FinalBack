@@ -32,4 +32,7 @@ public class TourList {
     private int favoriteCount;
     private String likedYn = "N"; // "Y" | "N"
     private int reviewCount;
+    private java.time.LocalDate eventStartDate;
+    private java.time.LocalDate eventEndDate;
+
 }
