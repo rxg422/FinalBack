@@ -24,8 +24,8 @@ public class AIController {
 	private final AIService aiService;
 	
 	@PostMapping("recommend")
-	public ResponseEntity<List<AIRecDto>> aiRecommend(@RequestBody int areaCode[]) {
-		List<AIRecDto> response = aiService.aiRecommend(areaCode);
+	public ResponseEntity<List<AIRecDto>> aiRecommend() {
+		List<AIRecDto> response = aiService.aiRecommend();
 		
 		return ResponseEntity.ok(response);
 	}

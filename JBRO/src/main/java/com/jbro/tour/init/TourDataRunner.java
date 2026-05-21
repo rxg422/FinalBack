@@ -31,8 +31,7 @@ public class TourDataRunner implements ApplicationRunner {
 //            lDongService.fetchAndSaveLDongData();
         	
 //        	System.out.println("AI 관광지 추천 테스트");
-//        	int areas[] = {111, 113};
-//        	List<AIRecDto> list = aiService.aiRecommend(areas);
+//        	List<AIRecDto> list = aiService.aiRecommend();
 //        	System.out.println(list);
         	
         	

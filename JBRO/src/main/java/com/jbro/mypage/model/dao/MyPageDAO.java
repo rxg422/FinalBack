@@ -7,6 +7,12 @@ import org.apache.ibatis.annotations.Param;
 
 import com.jbro.mypage.model.vo.MemberVo;
 import com.jbro.mypage.model.vo.MyPageFavoriteVo;
+import com.jbro.mypage.model.vo.MyPagePlannerCandidateVo;
+import com.jbro.mypage.model.vo.MyPagePlannerDayVo;
+import com.jbro.mypage.model.vo.MyPagePlannerDetailDayVo;
+import com.jbro.mypage.model.vo.MyPagePlannerDetailPlaceVo;
+import com.jbro.mypage.model.vo.MyPagePlannerDetailVo;
+import com.jbro.mypage.model.vo.MyPagePlannerVo;
 import com.jbro.mypage.model.vo.MyPageReportVo;
 import com.jbro.mypage.model.vo.MyPageReviewVo;
 
@@ -38,4 +44,48 @@ public interface MyPageDAO {
 	List<MyPageReviewVo> selectMyReviews(Long memberId);
 
 	List<MyPageReportVo> selectMyReports(Long memberId);
+
+	List<MyPagePlannerCandidateVo> selectPlannerCandidates(
+		@Param("source") String source,
+		@Param("category") String category,
+		@Param("keyword") String keyword,
+		@Param("regions") List<String> regions,
+		@Param("excludeContentIds") List<Long> excludeContentIds,
+		@Param("limit") int limit
+	);
+
+	List<MyPagePlannerVo> selectMyPlanners(Long memberId);
+
+	MyPagePlannerVo selectMyPlanner(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	MyPagePlannerDetailVo selectMyPlannerDetail(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	List<String> selectMyPlannerRegions(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	List<MyPagePlannerDetailDayVo> selectMyPlannerDays(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	List<MyPagePlannerDetailPlaceVo> selectMyPlannerPlaces(@Param("dayId") Long dayId);
+
+	int insertPlanner(MyPagePlannerVo planner);
+
+	int updatePlanner(@Param("planner") MyPagePlannerVo planner, @Param("memberId") Long memberId);
+
+	int deletePlannerPlaces(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	int deletePlannerDays(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	int deletePlannerRegions(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
+	int insertPlannerDay(MyPagePlannerDayVo day);
+
+	Integer selectSignguCdByRegion(String region);
+
+	int insertPlannerRegion(@Param("plannerId") Long plannerId, @Param("signguCd") Integer signguCd);
+
+	int insertPlannerPlace(
+		@Param("dayId") Long dayId,
+		@Param("visitOrder") int visitOrder,
+		@Param("contentId") Long contentId,
+		@Param("description") String description
+	);
 }
