@@ -13,6 +13,7 @@ import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanner;
 import com.jbro.ai.model.dto.AIDto.AIRegion;
 import com.jbro.ai.model.dto.AIDto.AIThema;
+import com.jbro.ai.model.dto.AIDto.UserFavorit;
 import com.jbro.ai.model.dto.AIRecDto;
 
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ public class AIDaoImpl implements AIDao {
 	private final SqlSessionTemplate session;
 
 	@Override
-	public List<AIRecDto> selectPlaceList(int[] areaCode) {
-		return session.selectList("aiMapper.selectPlaceList", areaCode);
+	public List<AIRecDto> selectPlaceList() {
+		return session.selectList("aiMapper.selectPlaceList");
 	}
 
 	@Override
@@ -66,6 +67,11 @@ public class AIDaoImpl implements AIDao {
 	@Override
 	public void insertPlanThema(AIThema thema) {
 		session.insert("aiMapper.insertPlanThema", thema);
+	}
+
+	@Override
+	public List<UserFavorit> selectUserFavoritList(Long userId) {
+		return session.selectList("aiMapper.selectUserFavoriteList", userId);
 	}
 	
 	

@@ -6,10 +6,6 @@
 	<select id="selectPlaceList" resultType="AIRecDto">
 		SELECT CONTENT_ID, TITLE, FIRST_IMAGE2, ADDR1, ADDR2
 		FROM TOUR_PLACE
-		WHERE L_DONG_SIGNGU_CD IN
-		<foreach collection="array" item="areaCode" open="(" separator="," close=")">
-			#{areaCode}
-		</foreach> 
 		ORDER BY VIEW_COUNT
 		LIMIT 30;
 	</select>
@@ -59,4 +55,11 @@
 	<insert id="insertPlanThema">
 		INSERT INTO PLANNER_THEMA VALUES (#{plannerId}, #{thema})
 	</insert>
+	
+	<select id="selectUserFavoriteList" resultType="com.jbro.ai.model.dto.AIDto$UserFavorit">
+		SELECT TP.CONTENT_ID, TP.TITLE
+		FROM FAVORITE F
+		JOIN TOUR_PLACE TP ON (F.CONTENT_ID = TP.CONTENT_ID)
+		WHERE USER_ID = #{userId}
+	</select>
 </mapper>

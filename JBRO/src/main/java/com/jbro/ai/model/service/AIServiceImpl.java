@@ -24,6 +24,7 @@ import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanner;
 import com.jbro.ai.model.dto.AIDto.AIRegion;
 import com.jbro.ai.model.dto.AIDto.AIThema;
+import com.jbro.ai.model.dto.AIDto.UserFavorit;
 import com.jbro.ai.model.dto.AIRecDto;
 
 import lombok.RequiredArgsConstructor;
@@ -45,26 +46,33 @@ public class AIServiceImpl implements AIService {
 	private String grokUrl;
 	
 	@Override
-	public List<AIRecDto> aiRecommend(int areaCode[]) {
-		List<AIRecDto> placeList = aiDao.selectPlaceList(areaCode);
+	public List<AIRecDto> aiRecommend() {
+		List<UserFavorit> favoriteList = aiDao.selectUserFavoritList(getCurrentUserId());
+		List<AIRecDto> placeList = aiDao.selectPlaceList();
 		
 		String placeInfo = placeList.stream().map(place -> String.format(
 				"""
 				contentId: %d
 				title:  %s
-				addr1: %s
-                addr2: %s
 				""",
 				place.getContentId(),
-				place.getTitle(),
-				place.getAddr1(),
-				place.getAddr2()
+				place.getTitle()
+				)).collect(Collectors.joining("\n"));
+		
+		String favoriteInfo = favoriteList.stream().map(favorite -> String.format(
+				"""
+				contentId: %d,
+				title: %s
+				""",
+				favorite.getContentId(),
+				favorite.getTitle()
 				)).collect(Collectors.joining("\n"));
 		
 		String prompt = """
 				You are an AI that recommends tourist spots in Jeollabuk-do.
-				Recommend 5 travel destinations from the list below with simple recommendation reasons.
+				Based on favorite, please recommend 5 travel destinations from the list below with simple reasons for recommendation.
 				
+				favorite: %s
 				list: %s
 				
 				Please respond only in the JSON array format below.
@@ -74,22 +82,26 @@ public class AIServiceImpl implements AIService {
                   {
                     "contentId": 123,
                     "title": "전주한옥마을",
-                    "firstImage2": "https://...",
-                    "addr1": "전북 전주시 ...",
-                    "addr2": "",
                     "reason": "전통 한옥과 먹거리를 함께 즐길 수 있습니다."
                   }
                 ]
-				""".formatted(placeInfo);
+				""".formatted(favoriteInfo, placeInfo);
         
         String content = callGroq(prompt);
         		
 		try {
             // JSON 문자열 → List<AIRecDto>
-            return objectMapper.readValue(
-                    content,
-                    new TypeReference<List<AIRecDto>>() {}
-            );
+            List<AIRecDto> places = objectMapper.readValue(content, new TypeReference<List<AIRecDto>>() {});
+            
+            for (AIRecDto place : places) {
+            	PlanPlace dto = aiDao.selectPlaceById(place.getContentId());
+            	
+            	place.setFirstImage2(dto.getFirstImage2());
+            	place.setAddr1(dto.getAddr1());
+            	place.setAddr2(dto.getAddr2());
+            }
+            
+            return places;
         }
 		catch (Exception e) {
             throw new RuntimeException("AI 응답 파싱 실패: " + content, e);
