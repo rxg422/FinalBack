@@ -8,6 +8,8 @@ import com.jbro.ai.model.dto.AIDto.AIPlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanner;
+import com.jbro.ai.model.dto.AIDto.AIRegion;
+import com.jbro.ai.model.dto.AIDto.AIThema;
 import com.jbro.ai.model.dto.AIRecDto;
 
 public interface AIDao {
@@ -25,5 +27,9 @@ public interface AIDao {
 	void insertAIDay(AIDay aiDay);
 
 	void insertAIPlace(AIPlace aiPlace);
+
+	void insertPlanRegion(AIRegion region);
+
+	void insertPlanThema(AIThema thema);
 
 }

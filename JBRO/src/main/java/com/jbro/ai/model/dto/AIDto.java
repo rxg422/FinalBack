@@ -33,6 +33,8 @@ public class AIDto {
 		private String title;
 		private String description;
 		private PlanDays days[];
+		private List<String> regions;
+		private List<String> themas;
 		
 		@Data
 		public static class PlanDays {
@@ -62,6 +64,18 @@ public class AIDto {
 		private long userId;
 		private String title;
 		private String description;
+	}
+	
+	@Data
+	public static class AIRegion {
+		private int plannerId;
+		private int region;
+	}
+	
+	@Data
+	public static class AIThema {
+		private int plannerId;
+		private int thema;
 	}
 	
 	@Data

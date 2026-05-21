@@ -22,6 +22,8 @@ import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanner;
+import com.jbro.ai.model.dto.AIDto.AIRegion;
+import com.jbro.ai.model.dto.AIDto.AIThema;
 import com.jbro.ai.model.dto.AIRecDto;
 
 import lombok.RequiredArgsConstructor;
@@ -180,9 +182,12 @@ public class AIServiceImpl implements AIService {
 		
 		try {
             // JSON 문자열 → List<AIRecDto>
-			AIPlanResp response = objectMapper.readValue(content, new TypeReference<AIPlanResp>() {});
+			AIPlanResp planner = objectMapper.readValue(content, new TypeReference<AIPlanResp>() {});
 			
-			for(PlanDays day : response.getDays()) {
+			planner.setRegions(request.getRegions());
+			planner.setThemas(request.getStyles());
+			
+			for(PlanDays day : planner.getDays()) {
 				for(PlanPlace place : day.getSchedule()) {
 					PlanPlace result = aiDao.selectPlaceById(place.getContentId());
 					
@@ -193,7 +198,7 @@ public class AIServiceImpl implements AIService {
 				}
 			}
 						
-			return response;
+			return planner;
         } catch (Exception e) {
             throw new RuntimeException("AI 응답 파싱 실패: " + content, e);
         }
@@ -250,7 +255,58 @@ public class AIServiceImpl implements AIService {
 		aiPlan.setTitle(plan.getTitle());
 		aiPlan.setDescription(plan.getDescription());
 		
+		
 		aiDao.insertAIPlan(aiPlan);
+
+		for (String regionNm : plan.getRegions()) {
+			AIRegion region = new AIRegion();
+			int regionCd = 110;
+			
+			switch (regionNm) {
+			case "전주" : regionCd = 110; break;
+			case "군산" : regionCd = 130; break;
+			case "익산" : regionCd = 140; break;
+			case "정읍" : regionCd = 180; break;
+			case "남원" : regionCd = 190; break;
+			case "김제" : regionCd = 210; break;
+			case "완주" : regionCd = 710; break;
+			case "진완" : regionCd = 720; break;
+			case "무주" : regionCd = 730; break;
+			case "장수" : regionCd = 740; break;
+			case "임실" : regionCd = 750; break;
+			case "순창" : regionCd = 770; break;
+			case "고창" : regionCd = 790; break;
+			case "부안" : regionCd = 800; break;
+			}
+			
+			region.setPlannerId(aiPlan.getId());
+			region.setRegion(regionCd);
+			
+			aiDao.insertPlanRegion(region);
+		
+		}
+		
+		for (String themaNm : plan.getThemas()) {
+			AIThema thema = new AIThema();
+			
+			int themaId = 1;
+			
+			switch (themaNm) {
+			case "history" : themaId = 1; break;
+			case "culture" : themaId = 2; break;
+			case "nature" : themaId = 3; break;
+			case "night" : themaId = 4; break;
+			case "activity" : themaId = 5; break;
+			case "family" : themaId = 6; break;
+			case "solo" : themaId = 7; break;
+			case "pet" : themaId = 8; break;
+			}
+			
+			thema.setPlannerId(aiPlan.getId());
+			thema.setThema(themaId);
+			
+			aiDao.insertPlanThema(thema);
+		}
 		
 		for (PlanDays dayPlan : plan.getDays()) {
 			AIDay aiDay = new AIDay();

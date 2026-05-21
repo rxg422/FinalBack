@@ -52,4 +52,11 @@
 		INSERT INTO PLACE_PLAN(DAY_ID, VISIT_ORDER, CONTENT_ID, DESCRIPTION) VALUES (#{dayId}, #{visitOrder}, #{contentId}, #{description})
 	</insert>
 	
+	<insert id="insertPlanRegion">
+		INSERT INTO PLANNER_REGIONS VALUES (#{plannerId}, #{region})
+	</insert>
+	
+	<insert id="insertPlanThema">
+		INSERT INTO PLANNER_THEMA VALUES (#{plannerId}, #{thema})
+	</insert>
 </mapper>
