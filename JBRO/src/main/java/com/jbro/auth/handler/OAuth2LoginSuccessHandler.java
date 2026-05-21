@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Cookie;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,7 +122,27 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	        session.setAttribute("memberId", member.getId());
 	        logger.info("Session attribute set");
 
+	        // ========== 쿠키에 토큰 저장 ==========
+	        Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
+	        accessTokenCookie.setHttpOnly(true);  // JavaScript 접근 불가 (보안)
+	        accessTokenCookie.setSecure(true);    // HTTPS만 전송
+	        accessTokenCookie.setPath("/");
+	        accessTokenCookie.setMaxAge(30 * 60); // 30분
+	        accessTokenCookie.setSameSite("Lax"); // CSRF 공격 방어
+	        response.addCookie(accessTokenCookie);
+	        logger.info("Access token cookie set");
+
+	        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+	        refreshTokenCookie.setHttpOnly(true);
+	        refreshTokenCookie.setSecure(true);
+	        refreshTokenCookie.setPath("/");
+	        refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+	        refreshTokenCookie.setSameSite("Lax");
+	        response.addCookie(refreshTokenCookie);
+	        logger.info("Refresh token cookie set");
+
 	        // ========== 프론트엔드로 성공 응답 ==========
+	        // URL 파라미터도 함께 유지 (호환성)
 	        String encodedToken = URLEncoder.encode(accessToken, StandardCharsets.UTF_8);
 	        String encodedRefreshToken = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8);
 	        String redirectUrl = frontendCallbackUrl + "?accessToken=" + encodedToken + "&refreshToken=" + encodedRefreshToken + "&success=true";
