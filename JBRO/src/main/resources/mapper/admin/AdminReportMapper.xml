@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.admin.AdminReportMapper">
+
+    <select id="selectReportList" resultType="com.jbro.admin.model.dto.AdminReportListDto">
+        SELECT
+            r.REPORT_ID       AS reportId,
+            r.REVIEW_ID       AS reviewId,
+            u1.NICKNAME       AS reporterNickname,
+            u2.NICKNAME       AS targetNickname,
+            tp.TITLE          AS placeTitle,
+            r.REPORT_TYPE     AS reportType,
+            r.REASON          AS reason,
+            r.STATUS          AS status,
+            r.CREATED_AT      AS createdAt
+        FROM REPORT r
+        JOIN USERS u1 ON r.USER_ID = u1.NO
+        JOIN REVIEW rv ON r.REVIEW_ID = rv.REVIEW_ID
+        JOIN USERS u2 ON rv.USER_ID = u2.NO
+        JOIN TOUR_PLACE tp ON rv.CONTENT_ID = tp.CONTENT_ID
+        ORDER BY r.CREATED_AT DESC
+    </select>
+
+    <select id="selectReportDetail" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminReportDetailDto">
+        SELECT
+            r.REPORT_ID       AS reportId,
+            r.REVIEW_ID       AS reviewId,
+            u1.NICKNAME       AS reporterNickname,
+            u2.NICKNAME       AS targetNickname,
+            r.CREATED_AT      AS createdAt,
+            r.STATUS          AS status,
+            r.HANDLED_AT      AS handledAt,
+            r.REPORT_TYPE     AS reportType,
+            r.REASON          AS reason,
+            rv.CONTENT        AS reviewContent,
+            rv.REVIEW_IMAGE   AS reviewImage
+        FROM REPORT r
+        JOIN USERS u1 ON r.USER_ID = u1.NO
+        JOIN REVIEW rv ON r.REVIEW_ID = rv.REVIEW_ID
+        JOIN USERS u2 ON rv.USER_ID = u2.NO
+        WHERE r.REPORT_ID = #{reportId}
+    </select>
+
+    <update id="updateReportAccept" parameterType="long">
+        UPDATE REPORT
+        SET STATUS = 'ACCEPTED', HANDLED_AT = NOW()
+        WHERE REPORT_ID = #{reportId}
+    </update>
+
+    <update id="updateReviewHidden" parameterType="long">
+        UPDATE REVIEW
+        SET REVIEW_ACTIVE = 'N'
+        WHERE REVIEW_ID = #{reviewId}
+    </update>
+
+    <update id="updateReportReject" parameterType="long">
+        UPDATE REPORT
+        SET STATUS = 'REJECTED', HANDLED_AT = NOW()
+        WHERE REPORT_ID = #{reportId}
+    </update>
+
+</mapper>

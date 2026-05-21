@@ -95,12 +95,14 @@ public class SecurityConfig {
 
                         // ========== 관리자 API (ADMIN만) ==========
                         // 사용자 목록 조회
-                        .requestMatchers(HttpMethod.GET, "/api/admin/users").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/dashboard").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/users").hasRole("ADMIN")
                         // 사용자 권한 변경
-                        .requestMatchers(HttpMethod.PATCH, "/api/admin/users/*/role").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/users/*/role").hasRole("ADMIN")
                         // 신고 관리
-                        .requestMatchers(HttpMethod.GET, "/api/admin/reports").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PATCH, "/api/admin/reports/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/reports").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/reports/**").hasRole("ADMIN")
+                        
 
                         // 나머지
                         .anyRequest().authenticated()

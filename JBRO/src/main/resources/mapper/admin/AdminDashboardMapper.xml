@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.admin.AdminDashboardMapper">
+
+    <select id="selectPendingReportCount" resultType="int">
+        SELECT COUNT(*) FROM REPORT WHERE STATUS = 'PENDING'
+    </select>
+
+    <select id="selectTotalCourseCount" resultType="int">
+        SELECT COUNT(*) FROM COURSE WHERE ACTIVE_YN = 'Y'
+    </select>
+
+    <select id="selectRecentReports" resultType="com.jbro.admin.model.dto.AdminDashboardDto$RecentReport">
+        SELECT
+            r.REPORT_ID       AS reportId,
+            u.NICKNAME        AS reporterNickname,
+            r.REPORT_TYPE     AS reportType,
+            r.REASON          AS reason,
+            r.STATUS          AS status,
+            r.CREATED_AT      AS createdAt
+        FROM REPORT r
+        JOIN USERS u ON r.USER_ID = u.NO
+        ORDER BY r.CREATED_AT DESC
+        LIMIT 5
+    </select>
+
+</mapper>
