@@ -14,6 +14,25 @@
     <result property="status" column="STATUS"/>
   </resultMap>
 
+  <resultMap id="plannerResultMap" type="com.jbro.mypage.model.vo.MyPagePlannerVo">
+    <id property="plannerId" column="ID"/>
+    <result property="userId" column="USER_ID"/>
+    <result property="title" column="TITLE"/>
+    <result property="description" column="DESCRIPTION"/>
+    <result property="isPublic" column="IS_PUBLIC"/>
+    <result property="status" column="STATUS"/>
+    <result property="createdTime" column="CREATED_TIME"/>
+  </resultMap>
+
+  <resultMap id="plannerDetailResultMap" type="com.jbro.mypage.model.vo.MyPagePlannerDetailVo">
+    <id property="plannerId" column="ID"/>
+    <result property="userId" column="USER_ID"/>
+    <result property="title" column="TITLE"/>
+    <result property="description" column="DESCRIPTION"/>
+    <result property="isPublic" column="IS_PUBLIC"/>
+    <result property="status" column="STATUS"/>
+  </resultMap>
+
   <select id="selectMemberList" resultMap="memberResultMap">
     SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
     FROM USERS
@@ -155,4 +174,263 @@
     WHERE RP.USER_ID = #{memberId}
     ORDER BY RP.CREATED_AT DESC, RP.REPORT_ID DESC
   </select>
+
+  <select id="selectPlannerCandidates" resultType="com.jbro.mypage.model.vo.MyPagePlannerCandidateVo">
+    SELECT
+      T.CONTENT_ID AS contentId,
+      T.TITLE AS title,
+      T.CONTENT_TYPE_ID AS contentTypeId,
+      T.CATEGORY_ID AS categoryId,
+      CASE T.CONTENT_TYPE_ID
+        WHEN 12 THEN '관광지'
+        WHEN 15 THEN '행사'
+        WHEN 32 THEN '숙소'
+        WHEN 39 THEN '식당'
+        ELSE COALESCE(C.NAME, '기타')
+      END AS categoryName,
+      T.FIRST_IMAGE AS firstImage,
+      T.FIRST_IMAGE2 AS firstImage2,
+      T.ADDR1 AS addr1,
+      COALESCE(L.L_DONG_SIGNGU_NM, T.ADDR1) AS region,
+      T.OVERVIEW AS description,
+      CASE
+        WHEN #{source} = 'ai' THEN '선택한 지역과 여행 조건에 적합한 장소입니다.'
+        ELSE NULL
+      END AS reason
+    FROM TOUR_PLACE T
+    LEFT JOIN CATEGORY C ON T.CATEGORY_ID = C.ID
+    LEFT JOIN LDONG L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+    <where>
+      <choose>
+        <when test="category == '관광지'">
+          (T.CONTENT_TYPE_ID = 12 OR T.CATEGORY_ID = 1)
+        </when>
+        <when test="category == '행사'">
+          (T.CONTENT_TYPE_ID = 15 OR T.CATEGORY_ID = 3)
+        </when>
+        <when test="category == '숙소'">
+          (T.CONTENT_TYPE_ID = 32 OR T.CATEGORY_ID = 4)
+        </when>
+        <when test="category == '식당'">
+          (T.CONTENT_TYPE_ID = 39 OR T.CATEGORY_ID = 2)
+        </when>
+      </choose>
+      <if test="keyword != null and keyword != ''">
+        AND (
+          T.TITLE LIKE CONCAT('%', #{keyword}, '%')
+          OR T.ADDR1 LIKE CONCAT('%', #{keyword}, '%')
+        )
+      </if>
+      <if test="regions != null and regions.size() > 0">
+        AND (
+          <foreach collection="regions" item="region" separator=" OR ">
+            L.L_DONG_SIGNGU_NM LIKE CONCAT('%', #{region}, '%')
+            OR T.ADDR1 LIKE CONCAT('%', #{region}, '%')
+          </foreach>
+        )
+      </if>
+      <if test="source == 'ai' and excludeContentIds != null and excludeContentIds.size() > 0">
+        AND T.CONTENT_ID NOT IN
+        <foreach collection="excludeContentIds" item="contentId" open="(" separator="," close=")">
+          #{contentId}
+        </foreach>
+      </if>
+    </where>
+    <choose>
+      <when test="source == 'ai'">
+        ORDER BY T.VIEW_COUNT DESC, T.TITLE ASC, T.CONTENT_ID DESC
+      </when>
+      <otherwise>
+        ORDER BY T.TITLE ASC, T.CONTENT_ID DESC
+      </otherwise>
+    </choose>
+    LIMIT #{limit}
+  </select>
+
+  <select id="selectMyPlanners" parameterType="long" resultMap="plannerResultMap">
+    SELECT
+      ID,
+      USER_ID,
+      TITLE,
+      DESCRIPTION,
+      IS_PUBLIC,
+      STATUS,
+      CREATED_TIME
+    FROM PLANNER
+    WHERE USER_ID = #{memberId}
+      AND STATUS = 'Y'
+    ORDER BY CREATED_TIME DESC, ID DESC
+  </select>
+
+  <select id="selectMyPlanner" resultMap="plannerResultMap">
+    SELECT
+      ID,
+      USER_ID,
+      TITLE,
+      DESCRIPTION,
+      IS_PUBLIC,
+      STATUS,
+      CREATED_TIME
+    FROM PLANNER
+    WHERE ID = #{plannerId}
+      AND USER_ID = #{memberId}
+      AND STATUS = 'Y'
+  </select>
+
+  <select id="selectMyPlannerDetail" resultMap="plannerDetailResultMap">
+    SELECT
+      ID,
+      USER_ID,
+      TITLE,
+      DESCRIPTION,
+      IS_PUBLIC,
+      STATUS
+    FROM PLANNER
+    WHERE ID = #{plannerId}
+      AND USER_ID = #{memberId}
+      AND STATUS = 'Y'
+  </select>
+
+  <select id="selectMyPlannerRegions" resultType="string">
+    SELECT L.L_DONG_SIGNGU_NM
+    FROM PLANNER_REGIONS PR
+    JOIN PLANNER P ON PR.PLANNER_ID = P.ID
+    JOIN LDONG L ON PR.SIGNGU_CD = L.L_DONG_SIGNGU_CD
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+    ORDER BY L.L_DONG_SIGNGU_NM ASC
+  </select>
+
+  <select id="selectMyPlannerDays" resultType="com.jbro.mypage.model.vo.MyPagePlannerDetailDayVo">
+    SELECT
+      DP.ID AS dayId,
+      DP.DAY AS dayNo
+    FROM DAY_PLAN DP
+    JOIN PLANNER P ON DP.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+    ORDER BY DP.DAY ASC, DP.ID ASC
+  </select>
+
+  <select id="selectMyPlannerPlaces" parameterType="long" resultType="com.jbro.mypage.model.vo.MyPagePlannerDetailPlaceVo">
+    SELECT
+      PP.ID AS placePlanId,
+      PP.VISIT_ORDER AS visitOrder,
+      T.CONTENT_ID AS contentId,
+      T.TITLE AS title,
+      T.FIRST_IMAGE AS firstImage,
+      T.FIRST_IMAGE2 AS firstImage2,
+      T.ADDR1 AS addr1,
+      CASE T.CONTENT_TYPE_ID
+        WHEN 12 THEN '관광지'
+        WHEN 15 THEN '행사'
+        WHEN 32 THEN '숙소'
+        WHEN 39 THEN '식당'
+        ELSE COALESCE(C.NAME, '기타')
+      END AS categoryName,
+      COALESCE(L.L_DONG_SIGNGU_NM, T.ADDR1) AS region,
+      T.MAP_X AS mapX,
+      T.MAP_Y AS mapY,
+      PP.DESCRIPTION AS description
+    FROM PLACE_PLAN PP
+    JOIN TOUR_PLACE T ON PP.CONTENT_ID = T.CONTENT_ID
+    LEFT JOIN CATEGORY C ON T.CATEGORY_ID = C.ID
+    LEFT JOIN LDONG L ON T.L_DONG_SIGNGU_CD = L.L_DONG_SIGNGU_CD
+    WHERE PP.DAY_ID = #{dayId}
+    ORDER BY PP.VISIT_ORDER ASC, PP.ID ASC
+  </select>
+
+  <insert id="insertPlanner" parameterType="com.jbro.mypage.model.vo.MyPagePlannerVo" useGeneratedKeys="true" keyProperty="plannerId" keyColumn="ID">
+    INSERT INTO PLANNER (
+      USER_ID,
+      TITLE,
+      DESCRIPTION,
+      IS_PUBLIC,
+      STATUS
+    ) VALUES (
+      #{userId},
+      #{title},
+      #{description},
+      COALESCE(#{isPublic}, 'N'),
+      COALESCE(#{status}, 'Y')
+    )
+  </insert>
+
+  <update id="updatePlanner">
+    UPDATE PLANNER
+    SET TITLE = #{planner.title},
+        DESCRIPTION = #{planner.description},
+        IS_PUBLIC = COALESCE(#{planner.isPublic}, 'N'),
+        STATUS = COALESCE(#{planner.status}, 'Y')
+    WHERE ID = #{planner.plannerId}
+      AND USER_ID = #{memberId}
+      AND STATUS = 'Y'
+  </update>
+
+  <delete id="deletePlannerPlaces">
+    DELETE PP
+    FROM PLACE_PLAN PP
+    JOIN DAY_PLAN DP ON PP.DAY_ID = DP.ID
+    JOIN PLANNER P ON DP.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+  </delete>
+
+  <delete id="deletePlannerDays">
+    DELETE DP
+    FROM DAY_PLAN DP
+    JOIN PLANNER P ON DP.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+  </delete>
+
+  <delete id="deletePlannerRegions">
+    DELETE PR
+    FROM PLANNER_REGIONS PR
+    JOIN PLANNER P ON PR.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+  </delete>
+
+  <insert id="insertPlannerDay" parameterType="com.jbro.mypage.model.vo.MyPagePlannerDayVo" useGeneratedKeys="true" keyProperty="dayId" keyColumn="ID">
+    INSERT INTO DAY_PLAN (
+      PLANNER_ID,
+      DAY
+    ) VALUES (
+      #{plannerId},
+      #{dayNo}
+    )
+  </insert>
+
+  <select id="selectSignguCdByRegion" parameterType="string" resultType="int">
+    SELECT L_DONG_SIGNGU_CD
+    FROM LDONG
+    WHERE L_DONG_SIGNGU_NM LIKE CONCAT('%', #{region}, '%')
+    ORDER BY L_DONG_SIGNGU_CD ASC
+    LIMIT 1
+  </select>
+
+  <insert id="insertPlannerRegion">
+    INSERT INTO PLANNER_REGIONS (
+      PLANNER_ID,
+      SIGNGU_CD
+    ) VALUES (
+      #{plannerId},
+      #{signguCd}
+    )
+  </insert>
+
+  <insert id="insertPlannerPlace">
+    INSERT INTO PLACE_PLAN (
+      DAY_ID,
+      VISIT_ORDER,
+      CONTENT_ID,
+      DESCRIPTION
+    ) VALUES (
+      #{dayId},
+      #{visitOrder},
+      #{contentId},
+      #{description}
+    )
+  </insert>
 </mapper>

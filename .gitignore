@@ -387,6 +387,5 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs,windows,eclipse,visualstudiocode,react,java,python
 JBRO/src/main/resources/application-local.properties
-JBRO/uploads/
 .claude/settings.local.json
 JBRO/.claude/settings.local.json
