@@ -90,6 +90,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
                         .requestMatchers("/api/mypage/**").authenticated()
                         .requestMatchers("/api/tour/**").authenticated()
+                        
+                        .requestMatchers(HttpMethod.POST, "/api/ai").authenticated()
 
                         // ========== 관리자 API (ADMIN만) ==========
                         // 사용자 목록 조회
