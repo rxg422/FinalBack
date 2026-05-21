@@ -63,9 +63,10 @@ public class OAuthLoginService {
 			// 3단계: 새로운 사용자 생성
 			MemberVo newMember = new MemberVo();
 			newMember.setEmail(userInfo.getEmail());
-			newMember.setNickname("");  // 닉네임셋업 페이지에서 설정하도록 빈 문자열로 강제
+			newMember.setNickname(null);  // 닉네임셋업 페이지에서 설정하도록 null로 설정
 			newMember.setProfile(userInfo.getProfile());
 			newMember.setStatus("Y");
+			newMember.setRole("USER");  // ✅ 신규 사용자는 기본적으로 USER 권한
 			newMember.setCreatedAt(java.time.LocalDateTime.now());
 
 			int memberInsertResult = mapper.insertMember(newMember);

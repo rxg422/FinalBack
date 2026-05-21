@@ -12,10 +12,11 @@
     <result property="profile" column="profile"/>
     <result property="createdAt" column="created_at"/>
     <result property="status" column="status"/>
+    <result property="role" column="role"/>
   </resultMap>
 
   <select id="selectMemberBySocialAccount" resultMap="memberResultMap">
-    SELECT U.NO, U.EMAIL, U.NICKNAME, U.PROFILE, U.CREATED_AT, U.STATUS
+    SELECT U.NO, U.EMAIL, U.NICKNAME, U.PROFILE, U.CREATED_AT, U.STATUS, U.ROLE
     FROM SOCIAL_ACCOUNT SA
     JOIN USERS U ON U.NO = SA.USER_ID
     WHERE SA.PROVIDER = #{provider}
@@ -24,14 +25,14 @@
   </select>
 
   <select id="selectActiveMemberByEmail" resultMap="memberResultMap">
-    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS, ROLE
     FROM USERS
     WHERE EMAIL = #{email}
       AND STATUS = 'Y'
   </select>
 
   <select id="selectMemberById" resultMap="memberResultMap">
-    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS
+    SELECT NO, EMAIL, NICKNAME, PROFILE, CREATED_AT, STATUS, ROLE
     FROM USERS
     WHERE NO = #{id}
       AND STATUS = 'Y'
@@ -43,12 +44,14 @@
       NICKNAME,
       PROFILE,
       STATUS,
+      ROLE,
       CREATED_AT
     ) VALUES (
       #{email},
       #{nickname},
       #{profile},
       #{status},
+      #{role},
       #{createdAt}
     )
   </insert>

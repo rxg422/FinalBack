@@ -40,4 +40,23 @@
 		SELECT FIRST_IMAGE2, ADDR1, ADDR2, MAP_X, MAP_Y FROM TOUR_PLACE WHERE CONTENT_ID = #{contentId}
 	</select>
 	
+	<insert id="insertAIPlan" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO PLANNER(USER_ID, IS_PUBLIC, TITLE, DESCRIPTION, STATUS) VALUES(#{userId}, DEFAULT, #{title}, #{description}, DEFAULT)
+	</insert>
+	
+	<insert id="insertAIDay" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO DAY_PLAN(PLANNER_ID, DAY) VALUES (#{plannerId}, #{day})
+	</insert>
+	
+	<insert id="insertAIPlace">
+		INSERT INTO PLACE_PLAN(DAY_ID, VISIT_ORDER, CONTENT_ID, DESCRIPTION) VALUES (#{dayId}, #{visitOrder}, #{contentId}, #{description})
+	</insert>
+	
+	<insert id="insertPlanRegion">
+		INSERT INTO PLANNER_REGIONS VALUES (#{plannerId}, #{region})
+	</insert>
+	
+	<insert id="insertPlanThema">
+		INSERT INTO PLANNER_THEMA VALUES (#{plannerId}, #{thema})
+	</insert>
 </mapper>

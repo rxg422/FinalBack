@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,6 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity  // ✅ @PreAuthorize 활성화
 public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
@@ -88,6 +90,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tourList/favorite/**").authenticated()
                         .requestMatchers("/api/mypage/**").authenticated()
                         .requestMatchers("/api/tour/**").authenticated()
+                        
+                        .requestMatchers(HttpMethod.POST, "/api/ai").authenticated()
+
+                        // ========== 관리자 API (ADMIN만) ==========
+                        // 사용자 목록 조회
+                        .requestMatchers(HttpMethod.GET, "/api/admin/users").hasAuthority("ADMIN")
+                        // 사용자 권한 변경
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/users/*/role").hasAuthority("ADMIN")
+                        // 신고 관리
+                        .requestMatchers(HttpMethod.GET, "/api/admin/reports").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/reports/**").hasAuthority("ADMIN")
 
                         // 나머지
                         .anyRequest().authenticated()

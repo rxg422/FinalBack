@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,19 +13,24 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jbro.ai.model.dao.AIDao;
+import com.jbro.ai.model.dto.AIDto.AIDay;
+import com.jbro.ai.model.dto.AIDto.AIPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanPlace;
 import com.jbro.ai.model.dto.AIDto.AIPlanReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp;
-import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays;
 import com.jbro.ai.model.dto.AIDto.AIPlanResp.PlanDays.PlanPlace;
+import com.jbro.ai.model.dto.AIDto.AIPlanUserReq;
+import com.jbro.ai.model.dto.AIDto.AIPlanner;
+import com.jbro.ai.model.dto.AIDto.AIRegion;
+import com.jbro.ai.model.dto.AIDto.AIThema;
 import com.jbro.ai.model.dto.AIRecDto;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 public class AIServiceImpl implements AIService {
 	
 	private final WebClient webClient = WebClient.builder().build();
@@ -75,44 +81,8 @@ public class AIServiceImpl implements AIService {
                   }
                 ]
 				""".formatted(placeInfo);
-		
-		// Grok AI 요청 Body 생성
-        Map<String, Object> requestBody = Map.of(
-                "model", "llama-3.3-70b-versatile",
-                "messages", List.of(
-                        Map.of(
-                                "role", "system",
-                                "content", "당신은 JSON만 반환하는 여행 추천 AI입니다."
-                        ),
-                        Map.of(
-                                "role", "user",
-                                "content", prompt
-                        )
-                ),
-                "temperature", 0.3
-        );
         
-        // xAI API 호출
-        Map response = webClient.post()
-                .uri(grokUrl) // https://api.x.ai/v1/chat/completions
-                .header("Authorization", "Bearer " + grokKey)
-                .header("Content-Type", "application/json")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
-        
-        // 응답에서 content 추출
-        List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-        Map<String, Object> firstChoice = choices.get(0);
-        Map<String, Object> message = (Map<String, Object>) firstChoice.get("message");
-        String content = (String) message.get("content");
-
-        // ```json ... ``` 형태로 감싸져 오는 경우 제거
-        content = content.replaceAll("^```json\\s*", "")
-                         .replaceAll("^```\\s*", "")
-                         .replaceAll("\\s*```$", "")
-                         .trim();
+        String content = callGroq(prompt);
         		
 		try {
             // JSON 문자열 → List<AIRecDto>
@@ -120,7 +90,8 @@ public class AIServiceImpl implements AIService {
                     content,
                     new TypeReference<List<AIRecDto>>() {}
             );
-        } catch (Exception e) {
+        }
+		catch (Exception e) {
             throw new RuntimeException("AI 응답 파싱 실패: " + content, e);
         }
 	}
@@ -154,8 +125,14 @@ public class AIServiceImpl implements AIService {
 			
 			[Schedule Generation Rules]
 			- Be sure to only select from the list of places provided below.
-			- Consider moving routes.
+			- You should consider the path of travel based on the address.
 			- Do not use the same place repeatedly.
+			
+			[Last day or One day trip pattern]
+			1. 관광지
+			2. 음식점
+			3. 관광지
+			4. 관광지
 			
 			[Day schedule pattern]
 			1. 관광지
@@ -164,12 +141,6 @@ public class AIServiceImpl implements AIService {
 			4. 관광지
 			5. 음식점
 			6. 숙소
-			
-			[Last day or One day trip pattern]
-			1. 관광지
-			2. 음식점
-			3. 관광지
-			4. 관광지
 			
 			[response format]
 			{
@@ -207,13 +178,16 @@ public class AIServiceImpl implements AIService {
 					planLodgingList
 			);
 		
-		String content = callXAI(prompt);
+		String content = callGroq(prompt);
 		
 		try {
             // JSON 문자열 → List<AIRecDto>
-			AIPlanResp response = objectMapper.readValue(content, new TypeReference<AIPlanResp>() {});
+			AIPlanResp planner = objectMapper.readValue(content, new TypeReference<AIPlanResp>() {});
 			
-			for(PlanDays day : response.getDays()) {
+			planner.setRegions(request.getRegions());
+			planner.setThemas(request.getStyles());
+			
+			for(PlanDays day : planner.getDays()) {
 				for(PlanPlace place : day.getSchedule()) {
 					PlanPlace result = aiDao.selectPlaceById(place.getContentId());
 					
@@ -224,15 +198,15 @@ public class AIServiceImpl implements AIService {
 				}
 			}
 						
-			return response;
+			return planner;
         } catch (Exception e) {
             throw new RuntimeException("AI 응답 파싱 실패: " + content, e);
         }
 		
 	}
 	
-	private String callXAI(String prompt) {
-		// Grok AI 요청 Body 생성
+	private String callGroq(String prompt) {
+		// Groq AI 요청 Body 생성
         Map<String, Object> requestBody = Map.of(
                 "model", "llama-3.3-70b-versatile",
                 "messages", List.of(
@@ -248,7 +222,7 @@ public class AIServiceImpl implements AIService {
                 "temperature", 0.3
         );
         
-        // xAI(Grok) API 호출
+        // (Groq) API 호출
         Map response = webClient.post()
                 .uri(grokUrl) // https://api.x.ai/v1/chat/completions
                 .header("Authorization", "Bearer " + grokKey)
@@ -272,6 +246,97 @@ public class AIServiceImpl implements AIService {
         
         return content;
 	}
+
+	@Override
+	public void insertAIPlan(AIPlanResp plan) {
+		AIPlanner aiPlan = new AIPlanner();
+		
+		aiPlan.setUserId(getCurrentUserId());
+		aiPlan.setTitle(plan.getTitle());
+		aiPlan.setDescription(plan.getDescription());
+		
+		
+		aiDao.insertAIPlan(aiPlan);
+
+		for (String regionNm : plan.getRegions()) {
+			AIRegion region = new AIRegion();
+			int regionCd = 110;
+			
+			switch (regionNm) {
+			case "전주" : regionCd = 110; break;
+			case "군산" : regionCd = 130; break;
+			case "익산" : regionCd = 140; break;
+			case "정읍" : regionCd = 180; break;
+			case "남원" : regionCd = 190; break;
+			case "김제" : regionCd = 210; break;
+			case "완주" : regionCd = 710; break;
+			case "진완" : regionCd = 720; break;
+			case "무주" : regionCd = 730; break;
+			case "장수" : regionCd = 740; break;
+			case "임실" : regionCd = 750; break;
+			case "순창" : regionCd = 770; break;
+			case "고창" : regionCd = 790; break;
+			case "부안" : regionCd = 800; break;
+			}
+			
+			region.setPlannerId(aiPlan.getId());
+			region.setRegion(regionCd);
+			
+			aiDao.insertPlanRegion(region);
+		
+		}
+		
+		for (String themaNm : plan.getThemas()) {
+			AIThema thema = new AIThema();
+			
+			int themaId = 1;
+			
+			switch (themaNm) {
+			case "history" : themaId = 1; break;
+			case "culture" : themaId = 2; break;
+			case "nature" : themaId = 3; break;
+			case "night" : themaId = 4; break;
+			case "activity" : themaId = 5; break;
+			case "family" : themaId = 6; break;
+			case "solo" : themaId = 7; break;
+			case "pet" : themaId = 8; break;
+			}
+			
+			thema.setPlannerId(aiPlan.getId());
+			thema.setThema(themaId);
+			
+			aiDao.insertPlanThema(thema);
+		}
+		
+		for (PlanDays dayPlan : plan.getDays()) {
+			AIDay aiDay = new AIDay();
+			
+			aiDay.setPlannerId(aiPlan.getId());
+			aiDay.setDay(dayPlan.getDay());
+			
+			aiDao.insertAIDay(aiDay);
+			
+			for (PlanPlace place : dayPlan.getSchedule()) {
+				AIPlace aiPlace = new AIPlace();
+				
+				aiPlace.setDayId(aiDay.getId());
+				aiPlace.setVisitOrder(place.getOrder());
+				aiPlace.setContentId(place.getContentId());
+				aiPlace.setDescription(place.getReason());
+				
+				aiDao.insertAIPlace(aiPlace);
+			}
+		}
+		
+	}
+	
+	private Long getCurrentUserId() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Long) {
+            return (Long) auth.getPrincipal();
+        }
+        return null;
+    }
 	
 
 }
