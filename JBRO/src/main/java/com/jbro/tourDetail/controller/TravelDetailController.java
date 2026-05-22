@@ -65,10 +65,11 @@ public class TravelDetailController {
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<?> updateReview(
             @PathVariable long reviewId,
-            @RequestBody Map<String, String> body) {
+            @RequestParam("content") String content,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
         Long userId = getCurrentUserId();
         if (userId == null) return ResponseEntity.status(401).build();
-        travelDetailService.updateReview(reviewId, userId, body.get("content"));
+        travelDetailService.updateReview(reviewId, userId, content, image);
         return ResponseEntity.ok().build();
     }
 

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.admin.adminPlaceMapper">
+
+    <select id="selectPlaceList" parameterType="map"
+            resultType="com.jbro.admin.model.dto.AdminPlaceListDto">
+        SELECT
+            tp.CONTENT_ID       AS contentId,
+            tp.TITLE            AS title,
+            tp.ADDR1            AS addr1,
+            tp.FIRST_IMAGE      AS firstImage,
+            COUNT(DISTINCT pi.ID)           AS imageCount,
+            COUNT(DISTINCT rv.REVIEW_ID)    AS reviewImageCount
+        FROM TOUR_PLACE tp
+        LEFT JOIN PLACE_IMG pi ON tp.CONTENT_ID = pi.CONTENT_ID
+        LEFT JOIN REVIEW rv ON tp.CONTENT_ID = rv.CONTENT_ID
+            AND rv.REVIEW_IMAGE IS NOT NULL
+            AND rv.REVIEW_IMAGE != ''
+            AND rv.REVIEW_ACTIVE = 'Y'
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (tp.TITLE LIKE CONCAT('%', #{keyword}, '%')
+                OR tp.ADDR1 LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="noImageOnly != null and noImageOnly == true">
+                AND (tp.FIRST_IMAGE IS NULL OR tp.FIRST_IMAGE = '')
+            </if>
+        </where>
+        GROUP BY tp.CONTENT_ID, tp.TITLE, tp.ADDR1, tp.FIRST_IMAGE
+        ORDER BY reviewImageCount DESC, imageCount ASC
+        LIMIT 50
+    </select>
+
+    <select id="selectReviewImages" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminPlaceReviewImageDto">
+        SELECT
+            rv.REVIEW_ID        AS reviewId,
+            rv.REVIEW_IMAGE     AS reviewImage,
+            u.NICKNAME          AS writerNickname,
+            rv.CONTENT          AS content
+        FROM REVIEW rv
+        JOIN USERS u ON rv.USER_ID = u.NO
+        WHERE rv.CONTENT_ID = #{contentId}
+        AND rv.REVIEW_IMAGE IS NOT NULL
+        AND rv.REVIEW_IMAGE != ''
+        AND rv.REVIEW_ACTIVE = 'Y'
+        ORDER BY rv.CREATED_AT DESC
+    </select>
+
+    <insert id="insertPlaceImage" parameterType="map">
+        INSERT INTO PLACE_IMG (
+            CONTENT_ID, IMG_NAME, ORIGIN_IMG_URL, SERIAL_NUM, SMALL_IMAGE_URL
+        ) VALUES (
+            #{contentId}, #{imgName}, #{originImgUrl}, #{serialNum}, #{smallImageUrl}
+        )
+    </insert>
+
+    <delete id="deletePlaceImage" parameterType="long">
+        DELETE FROM PLACE_IMG WHERE ID = #{imageId}
+    </delete>
+
+   <select id="selectPlaceImages" parameterType="long" resultType="map">
+    SELECT
+        ID              AS imageId,
+        IMG_NAME        AS imgName,
+        ORIGIN_IMG_URL  AS originImgUrl
+    FROM PLACE_IMG
+    WHERE CONTENT_ID = #{contentId}
+    ORDER BY ID DESC
+</select>
+<update id="updatePlaceFirstImage" parameterType="map">
+    UPDATE TOUR_PLACE
+    SET FIRST_IMAGE = #{imageUrl}
+    WHERE CONTENT_ID = #{contentId}
+</update>
+</mapper>

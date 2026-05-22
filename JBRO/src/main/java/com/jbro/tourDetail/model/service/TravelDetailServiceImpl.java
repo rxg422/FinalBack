@@ -112,11 +112,16 @@ public class TravelDetailServiceImpl implements TravelDetailService {
     }
 
     @Override
-    public void updateReview(long reviewId, long userId, String content) {
+    public void updateReview(long reviewId, long userId, String content, MultipartFile image) {
+        String imageUrl = null;
+        if (image != null && !image.isEmpty()) {
+            imageUrl = saveImage(image);
+        }
         Map<String, Object> params = new HashMap<>();
-        params.put("reviewId", reviewId);
-        params.put("userId",   userId);
-        params.put("content",  content);
+        params.put("reviewId",  reviewId);
+        params.put("userId",    userId);
+        params.put("content",   content);
+        if (imageUrl != null) params.put("imageUrl", imageUrl);
         travelDetailDao.updateReview(params);
     }
 

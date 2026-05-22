@@ -102,7 +102,16 @@ public class SecurityConfig {
                         // 신고 관리
                         .requestMatchers(HttpMethod.GET, "/api/admin/reports").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/admin/reports/**").hasRole("ADMIN")
-                        
+                        // 코스 관리
+                        .requestMatchers(HttpMethod.GET, "/api/admin/courses").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/admin/courses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/admin/courses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/courses").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/admin/courses/**").hasRole("ADMIN")
+                        //사용자 리뷰이미지등록
+                        .requestMatchers(HttpMethod.GET, "/api/admin/places/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/admin/places/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/admin/places/**").hasRole("ADMIN")
 
                         // 나머지
                         .anyRequest().authenticated()
