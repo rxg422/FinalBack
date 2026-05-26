@@ -217,11 +217,14 @@
 
     <!-- 리뷰 수정 (본인만) -->
     <update id="updateReview" parameterType="map">
-        UPDATE REVIEW
-        SET CONTENT = #{content}
-        WHERE REVIEW_ID = #{reviewId}
-          AND USER_ID   = #{userId}
-    </update>
+    UPDATE REVIEW
+    SET CONTENT = #{content}
+    <if test="imageUrl != null">
+        , REVIEW_IMAGE = #{imageUrl}
+    </if>
+    WHERE REVIEW_ID = #{reviewId}
+      AND USER_ID   = #{userId}
+</update>
 
     <!-- 리뷰 소프트 삭제 (본인만) -->
     <update id="deleteReview" parameterType="map">

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.admin.adminCourseMapper">
+
+    <select id="selectCourseList" resultType="com.jbro.admin.model.dto.AdminCourseListDto">
+        SELECT * FROM (
+            SELECT
+                c.COURSE_ID             AS courseId,
+                c.TITLE                 AS title,
+                l.L_DONG_SIGNGU_NM      AS regionName,
+                c.THEME                 AS theme,
+                COUNT(cd.COURSE_DAY_ID) AS dayCount,
+                c.ACTIVE_YN             AS activeYn,
+                c.CREATED_AT            AS createdAt
+            FROM COURSE c
+            LEFT JOIN LDONG l ON c.REGION = l.L_DONG_SIGNGU_CD
+            LEFT JOIN COURSE_DAY cd ON c.COURSE_ID = cd.COURSE_ID
+            GROUP BY c.COURSE_ID, c.TITLE, l.L_DONG_SIGNGU_NM, c.THEME, c.ACTIVE_YN, c.CREATED_AT
+        ) AS tmp
+        ORDER BY tmp.createdAt DESC
+    </select>
+
+    <select id="selectCourseDetail" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminCourseDetailDto">
+        SELECT
+            c.COURSE_ID         AS courseId,
+            c.TITLE             AS title,
+            c.SUBTITLE          AS subtitle,
+            c.DURATION          AS duration,
+            c.REGION            AS region,
+            l.L_DONG_SIGNGU_NM  AS regionName,
+            c.THEME             AS theme,
+            c.TOTAL_DISTANCE    AS totalDistance,
+            c.HISTORY_YEAR      AS historyYear,
+            c.HISTORY_SUMMARY   AS historySummary,
+            c.INTRO_TITLE       AS introTitle,
+            c.INTRO_TEXT        AS introText,
+            c.HERO_IMAGE        AS heroImage,
+            c.ACTIVE_YN         AS activeYn
+        FROM COURSE c
+        LEFT JOIN LDONG l ON c.REGION = l.L_DONG_SIGNGU_CD
+        WHERE c.COURSE_ID = #{courseId}
+    </select>
+
+    <select id="selectCourseDays" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminCourseDayDto">
+        SELECT
+            COURSE_DAY_ID   AS courseDayId,
+            COURSE_ID       AS courseId,
+            DAY_NO          AS dayNo,
+            DAY_TITLE       AS dayTitle
+        FROM COURSE_DAY
+        WHERE COURSE_ID = #{courseId}
+        ORDER BY DAY_NO
+    </select>
+
+    <select id="selectCoursePlaces" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminCoursePlaceDto">
+        SELECT
+            cp.COURSE_PLACE_ID  AS coursePlaceId,
+            cp.PLACE_ID         AS placeId,
+            tp.TITLE            AS placeTitle,
+            cp.PLACE_DESC       AS placeDesc,
+            cp.PLACE_ORDER      AS placeOrder
+        FROM COURSE_PLACE cp
+        JOIN TOUR_PLACE tp ON cp.PLACE_ID = tp.CONTENT_ID
+        WHERE cp.COURSE_DAY_ID = #{courseDayId}
+        ORDER BY cp.PLACE_ORDER
+    </select>
+
+    <select id="selectCourseTips" parameterType="long" resultType="string">
+        SELECT TIP_CONTENT
+        FROM COURSE_TIP
+        WHERE COURSE_ID = #{courseId}
+        ORDER BY TIP_ORDER
+    </select>
+
+  <select id="searchPlaces" parameterType="map"
+        resultType="com.jbro.admin.model.dto.AdminCoursePlaceSearchDto">
+    SELECT
+        CONTENT_ID      AS contentId,
+        TITLE           AS title,
+        ADDR1           AS addr1,
+        FIRST_IMAGE     AS firstImage
+    FROM TOUR_PLACE
+    WHERE FIRST_IMAGE IS NOT NULL
+    AND FIRST_IMAGE != ''
+    <if test="keyword != null and keyword != ''">
+        AND (TITLE LIKE CONCAT('%', #{keyword}, '%')
+        OR ADDR1 LIKE CONCAT('%', #{keyword}, '%'))
+    </if>
+    <if test="categoryId != null">
+        AND CATEGORY_ID = #{categoryId}
+    </if>
+    ORDER BY VIEW_COUNT DESC
+    LIMIT 20
+</select>
+    <insert id="insertCourse" parameterType="com.jbro.admin.model.dto.AdminCourseSaveDto"
+            useGeneratedKeys="true" keyProperty="courseId">
+        INSERT INTO COURSE (
+            TITLE, SUBTITLE, DURATION, REGION, THEME,
+            TOTAL_DISTANCE, HISTORY_YEAR, HISTORY_SUMMARY,
+            INTRO_TITLE, INTRO_TEXT, HERO_IMAGE, ACTIVE_YN, CREATED_AT
+        ) VALUES (
+            #{title}, #{subtitle}, #{duration}, #{region}, #{theme},
+            #{totalDistance}, #{historyYear}, #{historySummary},
+            #{introTitle}, #{introText}, #{heroImage},
+            COALESCE(#{activeYn}, 'Y'), NOW()
+        )
+    </insert>
+
+    <insert id="insertCourseDay" parameterType="map"
+            useGeneratedKeys="true" keyProperty="courseDayId">
+        INSERT INTO COURSE_DAY (COURSE_ID, DAY_NO, DAY_TITLE)
+        VALUES (#{courseId}, #{dayNo}, #{dayTitle})
+    </insert>
+
+    <insert id="insertCoursePlace" parameterType="map">
+        INSERT INTO COURSE_PLACE (COURSE_DAY_ID, PLACE_ID, PLACE_ORDER, PLACE_DESC)
+        VALUES (#{courseDayId}, #{placeId}, #{placeOrder}, #{placeDesc})
+    </insert>
+
+    <insert id="insertCourseTip" parameterType="map">
+        INSERT INTO COURSE_TIP (COURSE_ID, TIP_CONTENT, TIP_ORDER)
+        VALUES (#{courseId}, #{tipContent}, #{tipOrder})
+    </insert>
+
+    <update id="updateCourse" parameterType="map">
+        UPDATE COURSE SET
+            TITLE           = #{title},
+            SUBTITLE        = #{subtitle},
+            DURATION        = #{duration},
+            REGION          = #{region},
+            THEME           = #{theme},
+            TOTAL_DISTANCE  = #{totalDistance},
+            HISTORY_YEAR    = #{historyYear},
+            HISTORY_SUMMARY = #{historySummary},
+            INTRO_TITLE     = #{introTitle},
+            INTRO_TEXT      = #{introText},
+            HERO_IMAGE      = #{heroImage},
+            ACTIVE_YN       = #{activeYn},
+            UPDATED_AT      = NOW()
+        WHERE COURSE_ID = #{courseId}
+    </update>
+
+    <update id="updateCourseActive" parameterType="long">
+        UPDATE COURSE SET ACTIVE_YN = 'Y' WHERE COURSE_ID = #{courseId}
+    </update>
+
+    <update id="updateCourseInactive" parameterType="long">
+        UPDATE COURSE SET ACTIVE_YN = 'N' WHERE COURSE_ID = #{courseId}
+    </update>
+
+    <delete id="deleteCourseTips" parameterType="long">
+        DELETE FROM COURSE_TIP WHERE COURSE_ID = #{courseId}
+    </delete>
+
+    <delete id="deleteCoursePlaces" parameterType="long">
+        DELETE FROM COURSE_PLACE
+        WHERE COURSE_DAY_ID IN (
+            SELECT COURSE_DAY_ID FROM COURSE_DAY WHERE COURSE_ID = #{courseId}
+        )
+    </delete>
+
+    <delete id="deleteCourseDays" parameterType="long">
+        DELETE FROM COURSE_DAY WHERE COURSE_ID = #{courseId}
+    </delete>
+
+
+    <select id="selectLdongList" resultType="map">
+    SELECT
+        L_DONG_SIGNGU_CD AS lDongSignguCd,
+        L_DONG_SIGNGU_NM AS lDongSignguNm
+    FROM LDONG
+    ORDER BY L_DONG_SIGNGU_CD
+</select>
+</mapper>

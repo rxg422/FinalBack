@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jbro.admin.adminReviewMapper">
+
+    <select id="selectReviewList" resultType="com.jbro.admin.model.dto.AdminReviewListDto">
+        SELECT
+            rv.REVIEW_ID        AS reviewId,
+            u.NICKNAME          AS writerNickname,
+            tp.TITLE            AS placeTitle,
+            rv.CONTENT          AS content,
+            rv.REVIEW_IMAGE     AS reviewImage,
+            rv.REVIEW_ACTIVE    AS reviewActive,
+            rv.CREATED_AT       AS createdAt
+        FROM REVIEW rv
+        JOIN USERS u ON rv.USER_ID = u.NO
+        JOIN TOUR_PLACE tp ON rv.CONTENT_ID = tp.CONTENT_ID
+        ORDER BY rv.CREATED_AT DESC
+    </select>
+
+    <select id="selectReviewDetail" parameterType="long"
+            resultType="com.jbro.admin.model.dto.AdminReviewDetailDto">
+        SELECT
+            rv.REVIEW_ID        AS reviewId,
+            rv.CONTENT_ID       AS contentId,
+            u.NICKNAME          AS writerNickname,
+            tp.TITLE            AS placeTitle,
+            rv.CONTENT          AS content,
+            rv.REVIEW_IMAGE     AS reviewImage,
+            rv.REVIEW_ACTIVE    AS reviewActive,
+            rv.CREATED_AT       AS createdAt
+        FROM REVIEW rv
+        JOIN USERS u ON rv.USER_ID = u.NO
+        JOIN TOUR_PLACE tp ON rv.CONTENT_ID = tp.CONTENT_ID
+        WHERE rv.REVIEW_ID = #{reviewId}
+    </select>
+
+    <update id="updateReviewHide" parameterType="long">
+        UPDATE REVIEW
+        SET REVIEW_ACTIVE = 'N'
+        WHERE REVIEW_ID = #{reviewId}
+    </update>
+
+    <update id="updateReviewShow" parameterType="long">
+        UPDATE REVIEW
+        SET REVIEW_ACTIVE = 'Y'
+        WHERE REVIEW_ID = #{reviewId}
+    </update>
+
+</mapper>

@@ -9,7 +9,7 @@ import java.util.List;
 public class AdminDashboardDaoImpl implements AdminDashboardDao {
 
     private final SqlSession sqlSession;
-    private static final String NS = "com.jbro.admin.AdminDashboardMapper.";
+    private static final String NS = "com.jbro.admin.adminDashboardMapper.";
 
     public AdminDashboardDaoImpl(SqlSession sqlSession) {
         this.sqlSession = sqlSession;

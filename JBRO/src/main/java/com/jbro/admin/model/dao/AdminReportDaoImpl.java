@@ -10,7 +10,7 @@ import java.util.List;
 public class AdminReportDaoImpl implements AdminReportDao {
 
     private final SqlSession sqlSession;
-    private static final String NS = "com.jbro.admin.AdminReportMapper.";
+    private static final String NS = "com.jbro.admin.adminReportMapper.";
 
     public AdminReportDaoImpl(SqlSession sqlSession) {
         this.sqlSession = sqlSession;
