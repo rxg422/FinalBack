@@ -1,19 +1,24 @@
 package com.jbro.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import com.jbro.admin.interceptor.VisitorInterceptor;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer{
+	 private final VisitorInterceptor visitorInterceptor; // 추가
+	 
+	  public WebConfig(VisitorInterceptor visitorInterceptor) { // 추가
+	        this.visitorInterceptor = visitorInterceptor;
+	    }
 
     @Bean
     public WebMvcConfigurer corsConfigurer() {
@@ -34,4 +39,10 @@ public class WebConfig implements WebMvcConfigurer{
 		  Path uploadPath = Paths.get("uploads").toAbsolutePath().normalize();
 		  registry.addResourceHandler("/uploads/**").addResourceLocations(uploadPath.toUri().toString() + "/");
 	 }
+  	 @Override // 추가
+     public void addInterceptors(InterceptorRegistry registry) {
+         registry.addInterceptor(visitorInterceptor)
+             .addPathPatterns("/api/**")
+             .excludePathPatterns("/api/admin/**");
+     }
 }
