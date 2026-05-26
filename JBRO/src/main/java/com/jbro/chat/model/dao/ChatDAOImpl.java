@@ -19,7 +19,7 @@ public class ChatDAOImpl implements ChatDAO {
     }
 
     @Override
-    public List<ChatVO> selectAllHistory() {
-        return sqlSession.selectList("chatMapper.selectAllHistory");
+    public List<ChatVO> selectAllHistory(int userNo) {
+        return sqlSession.selectList("chatMapper.selectAllHistory", userNo);
     }
 }

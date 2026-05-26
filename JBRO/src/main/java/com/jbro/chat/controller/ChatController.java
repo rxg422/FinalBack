@@ -53,8 +53,8 @@ public class ChatController {
     }
 
     @GetMapping("/history")
-    public ResponseEntity<List<ChatVO>> getHistory() {
-        List<ChatVO> historyList = chatHistoryService.getAllHistory();
+    public ResponseEntity<List<ChatVO>> getHistory(int userNo) {
+        List<ChatVO> historyList = chatHistoryService.getAllHistory(userNo);
         return ResponseEntity.ok(historyList);
     }
 }

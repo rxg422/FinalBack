@@ -26,6 +26,7 @@
             ANSWER,
             REG_DATE as regDate
         FROM CHAT_HISTORY
+        WHERE USER_ID = #{userNo}
         ORDER BY REG_DATE ASC
     </select>
 

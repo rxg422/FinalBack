@@ -18,7 +18,7 @@ public class ChatHistoryServiceImpl implements ChatHistoryService {
     }
 
     @Override
-    public List<ChatVO> getAllHistory() {
-        return chatDAO.selectAllHistory();
+    public List<ChatVO> getAllHistory(int userNo) {
+        return chatDAO.selectAllHistory(userNo);
     }
 }
