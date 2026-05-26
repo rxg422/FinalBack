@@ -2,7 +2,9 @@ package com.jbro.auth.model.service;
 
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.jbro.auth.model.dao.AuthDAO;
 import com.jbro.auth.model.vo.OAuthUserInfo;
@@ -37,15 +39,23 @@ public class OAuthLoginService {
 
 			// 1단계: 소셜 계정이 이미 있는지 확인
 			MemberVo member = mapper.selectMemberBySocialAccount(userInfo.getProvider(), userInfo.getProviderId());
+			System.out.println("🔍 조회된 member: " + (member != null ? "STATUS=" + member.getStatus() : "null"));
 			if (member != null) {
-				return member;
+			    if ("B".equals(member.getStatus())) {
+			        System.out.println("🚨 정지된 계정!");
+			        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다.");
+			    }
+			    return member;
 			}
 
 			// 2단계: 이메일로 기존 계정이 있는지 확인
 			if (userInfo.getEmail() != null && !userInfo.getEmail().isEmpty()) {
-				member = mapper.selectActiveMemberByEmail(userInfo.getEmail());
-				if (member != null) {
-					int insertResult = mapper.insertSocialAccount(
+			    member = mapper.selectActiveMemberByEmail(userInfo.getEmail());
+			    if (member != null) {
+			        if ("B".equals(member.getStatus())) {
+			            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "정지된 계정입니다.");
+			        }
+			        int insertResult = mapper.insertSocialAccount(
 						member.getId(),
 						userInfo.getProvider(),
 						userInfo.getProviderId(),

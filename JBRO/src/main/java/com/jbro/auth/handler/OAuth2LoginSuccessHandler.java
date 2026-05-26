@@ -154,7 +154,13 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	        logger.error("Exception type: {}", e.getClass().getName());
 	        logger.error("Exception message: {}", e.getMessage());
 
-	        String errorMessage = "알 수 없는 오류가 발생했습니다!";
+	        String errorMessage;
+	        if (e instanceof org.springframework.web.server.ResponseStatusException rse
+	            && rse.getStatusCode().value() == 403) {
+	            errorMessage = "blocked";
+	        } else {
+	            errorMessage = "알 수 없는 오류가 발생했습니다!";
+	        }
 	        String encodedError = URLEncoder.encode(errorMessage, StandardCharsets.UTF_8);
 	        try {
 	            response.sendRedirect(frontendCallbackUrl + "?error=" + encodedError);
