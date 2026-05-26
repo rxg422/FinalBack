@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.jbro.ai.model.dto.AIRecDto;
+import com.jbro.ai.model.service.AIService;
 import com.jbro.mypage.model.dao.MyPageDAO;
 import com.jbro.mypage.model.vo.MemberVo;
 import com.jbro.mypage.model.vo.MyPageFavoriteVo;
@@ -38,6 +40,16 @@ public class MyPageServiceImpl implements MyPageService {
 
 	private static final int PLANNER_CANDIDATE_LIMIT = 20;
 	private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/jpeg", "image/png", "image/webp");
+	private static final Set<String> ALLOWED_PLANNER_THEMAS = Set.of(
+		"1",
+		"2",
+		"3",
+		"4",
+		"5",
+		"6",
+		"7",
+		"8"
+	);
 	private static final Map<String, String> EXTENSIONS_BY_CONTENT_TYPE = Map.of(
 		"image/jpeg", ".jpg",
 		"image/png", ".png",
@@ -45,13 +57,16 @@ public class MyPageServiceImpl implements MyPageService {
 	);
 
 	private final MyPageDAO myPageDAO;
+	private final AIService aiService;
 	private final String serverPort;
 
 	public MyPageServiceImpl(
 		MyPageDAO myPageDAO,
+		AIService aiService,
 		@Value("${server.port:8081}") String serverPort
 	) {
 		this.myPageDAO = myPageDAO;
+		this.aiService = aiService;
 		this.serverPort = serverPort;
 	}
 
@@ -189,6 +204,13 @@ public class MyPageServiceImpl implements MyPageService {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 장소 후보 조회 방식입니다.");
 		}
 
+		if ("ai".equals(normalizedSource)) {
+			return aiService.aiRecommend()
+				.stream()
+				.map(this::toPlannerCandidate)
+				.toList();
+		}
+
 		String normalizedCategory = null;
 		if (category != null && !category.isBlank()) {
 			normalizedCategory = category.trim();
@@ -216,10 +238,28 @@ public class MyPageServiceImpl implements MyPageService {
 		);
 	}
 
+	private MyPagePlannerCandidateVo toPlannerCandidate(AIRecDto aiRec) {
+		MyPagePlannerCandidateVo candidate = new MyPagePlannerCandidateVo();
+		candidate.setContentId((long) aiRec.getContentId());
+		candidate.setTitle(aiRec.getTitle());
+		candidate.setFirstImage2(aiRec.getFirstImage2());
+		candidate.setAddr1(aiRec.getAddr1());
+		candidate.setDescription(aiRec.getReason());
+		candidate.setReason(aiRec.getReason());
+		return candidate;
+	}
+
 	@Override
 	public List<MyPagePlannerVo> getMyPlanners() {
 		Long memberId = getRequiredLoginMemberId();
-		return myPageDAO.selectMyPlanners(memberId);
+		List<MyPagePlannerVo> planners = myPageDAO.selectMyPlanners(memberId);
+
+		for (MyPagePlannerVo planner : planners) {
+			planner.setRegions(myPageDAO.selectMyPlannerRegions(planner.getPlannerId(), memberId));
+			planner.setThemas(myPageDAO.selectMyPlannerThemas(planner.getPlannerId(), memberId));
+		}
+
+		return planners;
 	}
 
 	@Override
@@ -232,6 +272,7 @@ public class MyPageServiceImpl implements MyPageService {
 		}
 
 		planner.setRegions(myPageDAO.selectMyPlannerRegions(plannerId, memberId));
+		planner.setThemas(myPageDAO.selectMyPlannerThemas(plannerId, memberId));
 
 		List<MyPagePlannerDetailDayVo> days = myPageDAO.selectMyPlannerDays(plannerId, memberId);
 		for (MyPagePlannerDetailDayVo day : days) {
@@ -250,9 +291,12 @@ public class MyPageServiceImpl implements MyPageService {
 
 		myPageDAO.insertPlanner(planner);
 		savePlannerRegions(planner.getPlannerId(), request);
+		savePlannerThemas(planner.getPlannerId(), request);
 		savePlannerDays(planner.getPlannerId(), request);
 
-		return myPageDAO.selectMyPlanner(planner.getPlannerId(), memberId);
+		MyPagePlannerVo savedPlanner = myPageDAO.selectMyPlanner(planner.getPlannerId(), memberId);
+		populatePlannerTags(savedPlanner, memberId);
+		return savedPlanner;
 	}
 
 	@Override
@@ -270,10 +314,25 @@ public class MyPageServiceImpl implements MyPageService {
 		myPageDAO.deletePlannerPlaces(plannerId, memberId);
 		myPageDAO.deletePlannerDays(plannerId, memberId);
 		myPageDAO.deletePlannerRegions(plannerId, memberId);
+		myPageDAO.deletePlannerThemas(plannerId, memberId);
 		savePlannerRegions(plannerId, request);
+		savePlannerThemas(plannerId, request);
 		savePlannerDays(plannerId, request);
 
-		return myPageDAO.selectMyPlanner(plannerId, memberId);
+		MyPagePlannerVo savedPlanner = myPageDAO.selectMyPlanner(plannerId, memberId);
+		populatePlannerTags(savedPlanner, memberId);
+		return savedPlanner;
+	}
+
+	@Override
+	@Transactional
+	public void deleteMyPlanner(Long plannerId) {
+		Long memberId = getRequiredLoginMemberId();
+		int updateCount = myPageDAO.deletePlanner(plannerId, memberId);
+
+		if (updateCount == 0) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "삭제할 활성 플래너를 찾을 수 없습니다.");
+		}
 	}
 
 	private MyPagePlannerVo buildPlanner(Long memberId, MyPagePlannerRequestVo request) {
@@ -357,6 +416,34 @@ public class MyPageServiceImpl implements MyPageService {
 
 			myPageDAO.insertPlannerRegion(plannerId, signguCd);
 		}
+	}
+
+	private void savePlannerThemas(Long plannerId, MyPagePlannerRequestVo request) {
+		if (request.getThemas() == null || request.getThemas().isEmpty()) {
+			return;
+		}
+
+		for (String thema : request.getThemas()) {
+			if (thema == null || thema.isBlank()) {
+				continue;
+			}
+
+			String trimmed = thema.trim();
+			if (!ALLOWED_PLANNER_THEMAS.contains(trimmed)) {
+				throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "허용되지 않는 테마입니다: " + thema);
+			}
+
+			myPageDAO.insertPlannerThema(plannerId, trimmed);
+		}
+	}
+
+	private void populatePlannerTags(MyPagePlannerVo planner, Long memberId) {
+		if (planner == null) {
+			return;
+		}
+
+		planner.setRegions(myPageDAO.selectMyPlannerRegions(planner.getPlannerId(), memberId));
+		planner.setThemas(myPageDAO.selectMyPlannerThemas(planner.getPlannerId(), memberId));
 	}
 
 	private void savePlannerDays(Long plannerId, MyPagePlannerRequestVo request) {

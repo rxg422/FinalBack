@@ -16,5 +16,6 @@ public class MyPagePlannerDetailVo {
 	private String isPublic;
 	private String status;
 	private List<String> regions;
+	private List<String> themas;
 	private List<MyPagePlannerDetailDayVo> days;
 }

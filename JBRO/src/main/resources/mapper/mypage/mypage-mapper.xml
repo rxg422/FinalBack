@@ -167,6 +167,12 @@
       RP.REPORT_TYPE AS reportType,
       RP.REASON AS reason,
       RP.STATUS AS reportStatus,
+      CASE RP.STATUS
+        WHEN 'PENDING' THEN '접수완료'
+        WHEN 'ACCEPTED' THEN '처리완료'
+        WHEN 'REJECTED' THEN '신고거절'
+        ELSE '상태확인필요'
+      END AS reportStatusName,
       RP.CREATED_AT AS createdAt
     FROM REPORT RP
     JOIN REVIEW RV ON RP.REVIEW_ID = RV.REVIEW_ID
@@ -301,6 +307,15 @@
     ORDER BY L.L_DONG_SIGNGU_NM ASC
   </select>
 
+  <select id="selectMyPlannerThemas" resultType="string">
+    SELECT PT.THEMA
+    FROM PLANNER_THEMA PT
+    JOIN PLANNER P ON PT.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+    ORDER BY PT.THEMA ASC
+  </select>
+
   <select id="selectMyPlannerDays" resultType="com.jbro.mypage.model.vo.MyPagePlannerDetailDayVo">
     SELECT
       DP.ID AS dayId,
@@ -367,6 +382,14 @@
       AND STATUS = 'Y'
   </update>
 
+  <update id="deletePlanner">
+    UPDATE PLANNER
+    SET STATUS = 'N'
+    WHERE ID = #{plannerId}
+      AND USER_ID = #{memberId}
+      AND STATUS = 'Y'
+  </update>
+
   <delete id="deletePlannerPlaces">
     DELETE PP
     FROM PLACE_PLAN PP
@@ -388,6 +411,14 @@
     DELETE PR
     FROM PLANNER_REGIONS PR
     JOIN PLANNER P ON PR.PLANNER_ID = P.ID
+    WHERE P.ID = #{plannerId}
+      AND P.USER_ID = #{memberId}
+  </delete>
+
+  <delete id="deletePlannerThemas">
+    DELETE PT
+    FROM PLANNER_THEMA PT
+    JOIN PLANNER P ON PT.PLANNER_ID = P.ID
     WHERE P.ID = #{plannerId}
       AND P.USER_ID = #{memberId}
   </delete>
@@ -417,6 +448,16 @@
     ) VALUES (
       #{plannerId},
       #{signguCd}
+    )
+  </insert>
+
+  <insert id="insertPlannerThema">
+    INSERT INTO PLANNER_THEMA (
+      PLANNER_ID,
+      THEMA
+    ) VALUES (
+      #{plannerId},
+      #{thema}
     )
   </insert>
 
