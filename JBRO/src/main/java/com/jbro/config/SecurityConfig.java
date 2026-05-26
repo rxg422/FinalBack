@@ -59,9 +59,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/aiRec/**").permitAll()
 
                         // 공개 API
-                        .requestMatchers("/api/health/**").permitAll()
-                        .requestMatchers("/api/members/**").permitAll()
-                        .requestMatchers("/api/users2/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
 
                         // 여행 코스 목록 조회

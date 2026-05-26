@@ -62,6 +62,8 @@ public interface MyPageDAO {
 
 	List<String> selectMyPlannerRegions(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
 
+	List<String> selectMyPlannerThemas(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
 	List<MyPagePlannerDetailDayVo> selectMyPlannerDays(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
 
 	List<MyPagePlannerDetailPlaceVo> selectMyPlannerPlaces(@Param("dayId") Long dayId);
@@ -70,17 +72,23 @@ public interface MyPageDAO {
 
 	int updatePlanner(@Param("planner") MyPagePlannerVo planner, @Param("memberId") Long memberId);
 
+	int deletePlanner(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
 	int deletePlannerPlaces(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
 
 	int deletePlannerDays(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
 
 	int deletePlannerRegions(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
 
+	int deletePlannerThemas(@Param("plannerId") Long plannerId, @Param("memberId") Long memberId);
+
 	int insertPlannerDay(MyPagePlannerDayVo day);
 
 	Integer selectSignguCdByRegion(String region);
 
 	int insertPlannerRegion(@Param("plannerId") Long plannerId, @Param("signguCd") Integer signguCd);
+
+	int insertPlannerThema(@Param("plannerId") Long plannerId, @Param("thema") String thema);
 
 	int insertPlannerPlace(
 		@Param("dayId") Long dayId,
