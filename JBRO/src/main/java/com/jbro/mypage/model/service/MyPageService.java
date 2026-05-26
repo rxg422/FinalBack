@@ -57,4 +57,6 @@ public interface MyPageService {
 	MyPagePlannerVo createMyPlanner(MyPagePlannerRequestVo request);
 
 	MyPagePlannerVo updateMyPlanner(Long plannerId, MyPagePlannerRequestVo request);
+
+	void deleteMyPlanner(Long plannerId);
 }

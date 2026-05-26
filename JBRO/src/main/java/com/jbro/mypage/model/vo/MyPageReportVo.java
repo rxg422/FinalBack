@@ -16,5 +16,6 @@ public class MyPageReportVo {
 	private String reportType;
 	private String reason;
 	private String reportStatus;
+	private String reportStatusName;
 	private LocalDateTime createdAt;
 }
