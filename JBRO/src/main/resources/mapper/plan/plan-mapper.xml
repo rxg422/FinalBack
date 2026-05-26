@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="PlanMapper">
+
+    <resultMap id="planDetailMap" type="com.jbro.plan.model.vo.PlanVo">
+        <id property="id" column="PLAN_ID"/>
+        <result property="title" column="TITLE"/>
+        <result property="summary" column="SUMMARY"/>
+        <result property="author" column="AUTHOR"/>
+        <collection property="days" ofType="com.jbro.plan.model.vo.DayPlanVo">
+            <id property="day" column="DAY_NUMBER"/>
+            <collection property="schedule" ofType="com.jbro.plan.model.vo.PlaceVo">
+                <result property="order" column="VISIT_ORDER"/>
+                <result property="contentId" column="CONTENT_ID"/>
+                <result property="title" column="PLACE_TITLE"/>
+                <result property="category" column="CATEGORY"/>
+                <result property="firstImage2" column="FIRST_IMAGE"/>
+                <result property="reason" column="PLACE_DESC"/>
+                <result property="mapX" column="MAP_X"/>
+                <result property="mapY" column="MAP_Y"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="selectPlanDetail" resultMap="planDetailMap">
+        SELECT 
+            p.ID as PLAN_ID, p.TITLE, p.DESCRIPTION as SUMMARY, u.NICKNAME as AUTHOR,
+            dp.DAY as DAY_NUMBER,
+            pp.VISIT_ORDER, pp.CONTENT_ID, pp.DESCRIPTION as PLACE_DESC,
+            tp.TITLE as PLACE_TITLE, tp.FIRST_IMAGE, tp.MAP_X, tp.MAP_Y,
+            CASE 
+                WHEN tp.CONTENT_TYPE_ID = 32 THEN '숙소' 
+                WHEN tp.CONTENT_TYPE_ID = 39 THEN '음식점' 
+                ELSE '관광지' 
+            END as CATEGORY
+        FROM PLANNER p
+        JOIN USERS u ON p.USER_ID = u.NO
+        JOIN DAY_PLAN dp ON p.ID = dp.PLANNER_ID
+        JOIN PLACE_PLAN pp ON dp.ID = pp.DAY_ID
+        JOIN TOUR_PLACE tp ON pp.CONTENT_ID = tp.CONTENT_ID
+        WHERE p.ID = #{id}
+        ORDER BY dp.DAY ASC, pp.VISIT_ORDER ASC
+    </select>
+
+    <!-- 목록 조회용 (기존 유지) -->
+    <select id="selectPublicPlanList" resultType="com.jbro.plan.model.vo.PlanVo">
+        SELECT 
+            p.ID as id, p.TITLE as title, p.DESCRIPTION as summary, u.NICKNAME as author,
+            (SELECT CASE WHEN COUNT(*) = 1 THEN '당일 코스' ELSE CONCAT(COUNT(*) - 1, '박 ', COUNT(*), '일') END FROM DAY_PLAN dp WHERE dp.PLANNER_ID = p.ID) as duration,
+            (SELECT tp.ADDR1 FROM DAY_PLAN dp JOIN PLACE_PLAN pp ON dp.ID = pp.DAY_ID JOIN TOUR_PLACE tp ON pp.CONTENT_ID = tp.CONTENT_ID WHERE dp.PLANNER_ID = p.ID ORDER BY dp.DAY ASC, pp.VISIT_ORDER ASC LIMIT 1) as region,
+            (SELECT tp.FIRST_IMAGE FROM DAY_PLAN dp JOIN PLACE_PLAN pp ON dp.ID = pp.DAY_ID JOIN TOUR_PLACE tp ON pp.CONTENT_ID = tp.CONTENT_ID WHERE dp.PLANNER_ID = p.ID AND tp.FIRST_IMAGE IS NOT NULL AND tp.FIRST_IMAGE != '' LIMIT 1) as image
+        FROM PLANNER p
+        LEFT JOIN USERS u ON p.USER_ID = u.NO
+        WHERE IS_PUBLIC = 'Y' 
+        AND p.STATUS = 'Y'
+        ORDER BY p.ID DESC
+    </select>
+
+</mapper>
