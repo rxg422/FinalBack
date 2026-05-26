@@ -15,6 +15,7 @@ public class PlanVo {
     private String summary;
     private String author;
     private String region;
+    private String theme;
     private String duration;
     private String image;
 
