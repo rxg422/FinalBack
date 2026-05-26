@@ -7,4 +7,5 @@ public interface AdminDashboardDao {
     int selectPendingReportCount();
     int selectTotalCourseCount();
     List<RecentReport> selectRecentReports();
+    int selectTodaySignupCount();
 }

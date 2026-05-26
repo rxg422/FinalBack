@@ -11,6 +11,8 @@ public class AdminDashboardDto {
     private int pendingReports;
     private int totalCourses;
     private List<RecentReport> recentReports;
+    private int todaySignups;      
+    private int todayVisitors; 
 
     @Data
     @NoArgsConstructor

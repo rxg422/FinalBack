@@ -25,4 +25,9 @@
         LIMIT 5
     </select>
 
+<select id="selectTodaySignupCount" resultType="int">
+    SELECT COUNT(*)
+    FROM USERS
+    WHERE DATE(CREATED_AT) = CURDATE()
+</select>
 </mapper>

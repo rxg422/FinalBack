@@ -19,9 +19,11 @@
     SELECT U.NO, U.EMAIL, U.NICKNAME, U.PROFILE, U.CREATED_AT, U.STATUS, U.ROLE
     FROM SOCIAL_ACCOUNT SA
     JOIN USERS U ON U.NO = SA.USER_ID
-    WHERE SA.PROVIDER = #{provider}
-      AND SA.PROVIDER_ID = #{providerId}
-      AND U.STATUS = 'Y'
+   WHERE SA.PROVIDER = #{provider}
+  AND SA.PROVIDER_ID = #{providerId}
+  AND U.STATUS != 'N'
+   ORDER BY U.NO DESC
+    LIMIT 1
   </select>
 
   <select id="selectActiveMemberByEmail" resultMap="memberResultMap">

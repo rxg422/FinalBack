@@ -29,4 +29,8 @@ public class AdminDashboardDaoImpl implements AdminDashboardDao {
     public List<RecentReport> selectRecentReports() {
         return sqlSession.selectList(NS + "selectRecentReports");
     }
+    @Override
+    public int selectTodaySignupCount() {
+        return sqlSession.selectOne(NS + "selectTodaySignupCount");
+    }
 }
