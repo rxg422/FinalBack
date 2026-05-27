@@ -50,4 +50,23 @@ public class AdminPlaceDaoImpl implements AdminPlaceDao {
         param.put("imageUrl", imageUrl);
         return sqlSession.update(NS + "updatePlaceFirstImage", param);
     }
+    @Override
+    public int updatePlaceFirstImageIfEmpty(Long contentId, String imageUrl) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("contentId", contentId);
+        param.put("imageUrl", imageUrl);
+        return sqlSession.update(NS + "updatePlaceFirstImageIfEmpty", param);
+    }
+    @Override
+    public Map<String, Object> selectPlaceImageById(Long imageId) {
+        return sqlSession.selectOne(NS + "selectPlaceImageById", imageId);
+    }
+
+    @Override
+    public int clearFirstImageIfMatch(Long contentId, String imageUrl) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("contentId", contentId);
+        param.put("imageUrl", imageUrl);
+        return sqlSession.update(NS + "clearFirstImageIfMatch", param);
+    }
 }

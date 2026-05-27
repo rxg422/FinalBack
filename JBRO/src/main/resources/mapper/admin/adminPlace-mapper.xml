@@ -29,7 +29,7 @@
         </where>
         GROUP BY tp.CONTENT_ID, tp.TITLE, tp.ADDR1, tp.FIRST_IMAGE
         ORDER BY reviewImageCount DESC, imageCount ASC
-        LIMIT 50
+        
     </select>
 
     <select id="selectReviewImages" parameterType="long"
@@ -73,5 +73,23 @@
     UPDATE TOUR_PLACE
     SET FIRST_IMAGE = #{imageUrl}
     WHERE CONTENT_ID = #{contentId}
+</update>
+<update id="updatePlaceFirstImageIfEmpty" parameterType="map">
+    UPDATE TOUR_PLACE
+    SET FIRST_IMAGE = #{imageUrl}
+    WHERE CONTENT_ID = #{contentId}
+    AND (FIRST_IMAGE IS NULL OR FIRST_IMAGE = '')
+</update>
+<select id="selectPlaceImageById" parameterType="long" resultType="map">
+    SELECT ID AS imageId, CONTENT_ID AS contentId, ORIGIN_IMG_URL AS originImgUrl
+    FROM PLACE_IMG
+    WHERE ID = #{imageId}
+</select>
+
+<update id="clearFirstImageIfMatch" parameterType="map">
+    UPDATE TOUR_PLACE
+    SET FIRST_IMAGE = ''
+    WHERE CONTENT_ID = #{contentId}
+    AND FIRST_IMAGE = #{imageUrl}
 </update>
 </mapper>
