@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface ChatHistoryService {
     void saveChat(ChatVO vo); 
-    List<ChatVO> getAllHistory(); 
+    List<ChatVO> getAllHistory(int userNo); 
 }

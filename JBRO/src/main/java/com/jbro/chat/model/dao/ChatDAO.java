@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface ChatDAO {
     int insertChat(ChatVO chat);
-    List<ChatVO> selectAllHistory();
+    List<ChatVO> selectAllHistory(int userNo);
 }
