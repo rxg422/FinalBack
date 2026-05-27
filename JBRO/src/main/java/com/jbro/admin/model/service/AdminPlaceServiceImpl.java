@@ -39,14 +39,25 @@ public class AdminPlaceServiceImpl implements AdminPlaceService {
         param.put("imgName", imgName);
         param.put("serialNum", "1");
         adminPlaceDao.insertPlaceImage(param);
-        
-        // TOUR_PLACE.FIRST_IMAGE도 업데이트
-        adminPlaceDao.updatePlaceFirstImage(contentId, imageUrl);
+
+        // FIRST_IMAGE가 없을 때만 업데이트
+        adminPlaceDao.updatePlaceFirstImageIfEmpty(contentId, imageUrl);
     }
 
     @Override
     public void deletePlaceImage(Long imageId) {
-        adminPlaceDao.deletePlaceImage(imageId);
+        // 삭제 전 이미지 URL 조회
+        Map<String, Object> imageInfo = adminPlaceDao.selectPlaceImageById(imageId);
+        if (imageInfo != null) {
+            String imageUrl = (String) imageInfo.get("originImgUrl");
+            Long contentId = ((Number) imageInfo.get("contentId")).longValue();
+            
+            // PLACE_IMG 삭제
+            adminPlaceDao.deletePlaceImage(imageId);
+            
+            // TOUR_PLACE.FIRST_IMAGE도 같은 URL이면 비워주기
+            adminPlaceDao.clearFirstImageIfMatch(contentId, imageUrl);
+        }
     }
     @Override
     public List<Map<String, Object>> getPlaceImages(Long contentId) {

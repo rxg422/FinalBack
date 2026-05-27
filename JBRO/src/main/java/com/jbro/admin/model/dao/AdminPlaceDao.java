@@ -12,4 +12,7 @@ public interface AdminPlaceDao {
     int deletePlaceImage(Long imageId);
     List<Map<String, Object>> selectPlaceImages(Long contentId);
     int updatePlaceFirstImage(Long contentId, String imageUrl);
+    int updatePlaceFirstImageIfEmpty(Long contentId, String imageUrl);
+    Map<String, Object> selectPlaceImageById(Long imageId);
+    int clearFirstImageIfMatch(Long contentId, String imageUrl);
 }
