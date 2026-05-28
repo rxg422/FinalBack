@@ -1,10 +1,14 @@
 package com.jbro.plan.model.service;
 
-import com.jbro.plan.model.vo.PlanVo;
 import java.util.List;
 
-public interface PlanService {
-    List<PlanVo> getSharedPlanList();
+import com.jbro.plan.model.dto.PlannerDto.Planner;
+import com.jbro.plan.model.vo.PlanVo;
 
-	PlanVo getPlanDetail(Long id);
+public interface PlanService {
+    List<Planner> getSharedPlanList();
+
+	Planner getPlanDetail(int id);
+
+	void insertPlanner(Planner plan);
 }

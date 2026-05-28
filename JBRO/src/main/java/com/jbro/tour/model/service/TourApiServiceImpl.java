@@ -53,7 +53,7 @@ public class TourApiServiceImpl implements TourApiService {
 		
 		List<PlaceDto> placeList;
 		try {
-			while (pageNo <= 9) {
+			while (true) {
 				/* 관광 목록 조회 */
 				placeList = getTourPlaceList(lDongRegnCd, pageNo, numOfRows);
 
