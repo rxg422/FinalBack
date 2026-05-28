@@ -261,6 +261,7 @@ public class AIServiceImpl implements AIService {
 
 	@Override
 	public void insertAIPlan(AIPlanResp plan) {
+		
 		AIPlanner aiPlan = new AIPlanner();
 		
 		aiPlan.setUserId(getCurrentUserId());
